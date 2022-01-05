@@ -4,6 +4,5 @@ ThisBuild / scalaVersion := "3.1.0"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "valheim-server",
-    idePackagePrefix := Some("me.ericjiang.valheimserver")
+    name := "valheim-server"
   )
