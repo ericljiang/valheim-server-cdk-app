@@ -12,7 +12,7 @@ class CdkPipelineStack(scope: Construct, id: String, props: StackProps = null) e
     .pipelineName("CdkPipeline")
     .synth(ShellStep.Builder
       .create("Synth")
-      .input(CodePipelineSource.gitHub("ericljiang/todo", "main"))
+      .input(CodePipelineSource.gitHub("ericljiang/valheim-server-cdk-app", "main"))
       .commands(Seq("npm install -g aws-cdk", "cdk synth").asJava)
       .build)
     .build
