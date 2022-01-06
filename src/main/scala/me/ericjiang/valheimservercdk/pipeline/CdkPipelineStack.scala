@@ -1,4 +1,4 @@
-package me.ericjiang.valheimserver.stacks
+package me.ericjiang.valheimservercdk.pipeline
 
 import software.amazon.awscdk.pipelines.{CodePipeline, CodePipelineSource, ConnectionSourceOptions, ShellStep}
 import software.amazon.awscdk.services.codestarconnections.CfnConnection
@@ -7,8 +7,11 @@ import software.constructs.Construct
 
 import scala.jdk.CollectionConverters._
 
+/**
+ * Self-mutating pipeline that deploys the CDK app.
+ */
 class CdkPipelineStack(scope: Construct, id: String, props: StackProps = null) extends Stack(scope, id, props) {
-
+  // The connection is in PENDING state when created through CFN and needs to updated in the console.
   // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-codestarconnections-connection.html
   private val codeStarConnection = CfnConnection.Builder.create(this, "CodeStarConnection")
     .connectionName("GitHubConnectionEricljiang")
