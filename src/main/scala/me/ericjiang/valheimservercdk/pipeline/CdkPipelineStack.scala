@@ -1,8 +1,9 @@
 package me.ericjiang.valheimservercdk.pipeline
 
+import me.ericjiang.valheimservercdk.Environments
 import software.amazon.awscdk.pipelines.{CodePipeline, CodePipelineSource, ConnectionSourceOptions, ShellStep}
 import software.amazon.awscdk.services.codestarconnections.CfnConnection
-import software.amazon.awscdk.{Stack, StackProps}
+import software.amazon.awscdk.{Stack, StackProps, StageProps}
 import software.constructs.Construct
 
 import scala.jdk.CollectionConverters._
@@ -17,6 +18,7 @@ class CdkPipelineStack(scope: Construct, id: String, props: StackProps = null) e
     .connectionName("GitHubConnectionEricljiang")
     .providerType("GitHub")
     .build
+
   // https://docs.aws.amazon.com/cdk/v2/guide/cdk_pipeline.html
   private val pipeline = CodePipeline.Builder
     .create(this, "pipeline")
@@ -29,4 +31,6 @@ class CdkPipelineStack(scope: Construct, id: String, props: StackProps = null) e
       .commands(Seq("npm install -g aws-cdk", "cdk synth").asJava)
       .build)
     .build
+
+  pipeline.addStage(new AppStage(this, "AppStage", StageProps.builder.env(Environments.Default).build))
 }
