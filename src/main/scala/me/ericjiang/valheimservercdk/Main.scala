@@ -5,7 +5,7 @@ import software.amazon.awscdk.{App, StackProps}
 
 object Main extends scala.App {
   val app = new App
-  new CdkPipelineStack(app, "CdkPipelineStack", StackProps.builder
+  new CdkPipelineStack(app, "ValheimServerCdkPipelineStack", StackProps.builder
     .env(Environments.Default)
     .build)
   app.synth
