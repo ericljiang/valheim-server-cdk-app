@@ -15,12 +15,28 @@ class ClientApi(scope: Construct, id: String) extends Construct(scope, id) {
   private val startServerFunction = Function.Builder.create(this, "StartServer")
     .runtime(Runtime.NODEJS_12_X)
     .handler("index.handler")
-    .code(new InlineCode("exports.handler = _ => 'Hello, CDK!';"))
+    .code(new InlineCode(
+      """exports.handler = async (event) => {
+        |    const response = {
+        |        statusCode: 200,
+        |        body: JSON.stringify('Hello from Lambda!'),
+        |    };
+        |    return response;
+        |};
+        |""".stripMargin))
     .build
   private val getServerStatusFunction = Function.Builder.create(this, "GetServerStatus")
     .runtime(Runtime.NODEJS_12_X)
     .handler("index.handler")
-    .code(new InlineCode("exports.handler = _ => 'Hello, CDK!';"))
+    .code(new InlineCode(
+      """exports.handler = async (event) => {
+        |    const response = {
+        |        statusCode: 200,
+        |        body: JSON.stringify('Hello from Lambda!'),
+        |    };
+        |    return response;
+        |};
+        |""".stripMargin))
     .build
 
   private val api = HttpApi.Builder.create(this, "HttpApi")
