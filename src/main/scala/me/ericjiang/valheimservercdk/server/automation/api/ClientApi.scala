@@ -1,4 +1,4 @@
-package me.ericjiang.valheimservercdk.server.api
+package me.ericjiang.valheimservercdk.server.automation.api
 
 import software.amazon.awscdk.Duration
 import software.amazon.awscdk.services.apigatewayv2.alpha.{AddRoutesOptions, CorsHttpMethod, CorsPreflightOptions, HttpApi, HttpMethod}
