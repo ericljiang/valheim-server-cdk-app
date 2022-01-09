@@ -24,7 +24,8 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
           |systemctl start valheim.service""".stripMargin)
     ))
     .build
-  // allow traffic to Valheim server
+  // allow incoming traffic
+  instance.getConnections.allowFromAnyIpv4(Port.tcp(22), "ssh")
   instance.getConnections.allowFromAnyIpv4(Port.udpRange(2456, 2458), "valheim")
   // update policy
 }
