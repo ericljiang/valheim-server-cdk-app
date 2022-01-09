@@ -18,11 +18,10 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
           |SERVER_PASS=secret
           |SERVER_PUBLIC=true""".stripMargin),
       InitFile.fromUrl("/etc/systemd/system/valheim.service", "https://raw.githubusercontent.com/lloesche/valheim-server-docker/main/valheim.service"),
-      // use this instead? https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html#aws-resource-init-services
-//      InitCommand.shellCommand(
-//        """sudo systemctl daemon-reload
-//          |sudo systemctl enable valheim.service
-//          |sudo systemctl start valheim.service""".stripMargin)
+      InitCommand.shellCommand(
+        """systemctl daemon-reload
+          |systemctl enable valheim.service
+          |systemctl start valheim.service""".stripMargin)
     ))
     .build
   // allow traffic to Valheim server
