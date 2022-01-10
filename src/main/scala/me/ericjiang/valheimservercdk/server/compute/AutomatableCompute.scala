@@ -18,17 +18,17 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
     .init(CloudFormationInit.fromElements(
       InitPackage.yum("docker"),
       InitFile.fromString("/etc/sysconfig/valheim-server",
-        s"""SERVER_NAME=My Server
-           |SERVER_PORT=2456
-           |WORLD_NAME=Dedicated
-           |SERVER_PASS=secret
-           |SERVER_PUBLIC=true
-           |DISCORD_WEBHOOK=https://discord.com/api/webhooks/930203489722826813/9r6qTG5_n162Fb2u6yISOvDh9GZ2kVdXKvCWGYUMKHUjTuMfGXOTE58w2gwYYOnhuZGD
-           |POST_SERVER_LISTENING_HOOK=curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"Valheim server started\"}" "$$DISCORD_WEBHOOK"
-           |PRE_SERVER_SHUTDOWN_HOOK=curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"Valheim server shutting down\"}" "$$DISCORD_WEBHOOK"
-           |POST_BACKUP_HOOK=aws s3 cp @BACKUP_FILE@ s3://${backupBucket.getBucketName}/
-           |PRE_SERVER_SHUTDOWN_HOOK=supervisorctl signal HUP valheim-backup && sleep 60
-           |""".stripMargin),
+        raw"""SERVER_NAME=My Server
+             |SERVER_PORT=2456
+             |WORLD_NAME=Dedicated
+             |SERVER_PASS=secret
+             |SERVER_PUBLIC=true
+             |DISCORD_WEBHOOK=https://discord.com/api/webhooks/930203489722826813/9r6qTG5_n162Fb2u6yISOvDh9GZ2kVdXKvCWGYUMKHUjTuMfGXOTE58w2gwYYOnhuZGD
+             |POST_SERVER_LISTENING_HOOK=curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"Valheim server started\"}" "$$DISCORD_WEBHOOK"
+             |PRE_SERVER_SHUTDOWN_HOOK=curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"Valheim server shutting down\"}" "$$DISCORD_WEBHOOK"
+             |POST_BACKUP_HOOK=aws s3 cp @BACKUP_FILE@ s3://${backupBucket.getBucketName}/
+             |PRE_SERVER_SHUTDOWN_HOOK=supervisorctl signal HUP valheim-backup && sleep 60
+             |""".stripMargin),
       InitFile.fromUrl("/etc/systemd/system/valheim.service", "https://raw.githubusercontent.com/lloesche/valheim-server-docker/main/valheim.service"),
       InitCommand.shellCommand(
         """systemctl daemon-reload
