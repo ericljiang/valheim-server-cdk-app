@@ -20,7 +20,7 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
           |WORLD_NAME=Dedicated
           |SERVER_PASS=secret
           |SERVER_PUBLIC=true
-          |DISCORD_WEBHOOK=https://discord.com/api/webhooks/930166932420829224/K7uJCinEs4PAEdRgJf07EXrOMiDpK7NmGJVSpxPtUdEvDYYehHwo0pan29nHpOO7U9db
+          |DISCORD_WEBHOOK=https://discord.com/api/webhooks/930203489722826813/9r6qTG5_n162Fb2u6yISOvDh9GZ2kVdXKvCWGYUMKHUjTuMfGXOTE58w2gwYYOnhuZGD
           |POST_SERVER_LISTENING_HOOK=curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"Valheim server started\"}" "$DISCORD_WEBHOOK"
           |PRE_SERVER_SHUTDOWN_HOOK=curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"Valheim server shutting down\"}" "$DISCORD_WEBHOOK"
           |""".stripMargin),
