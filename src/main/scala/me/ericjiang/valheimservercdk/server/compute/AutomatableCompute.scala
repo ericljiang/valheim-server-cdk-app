@@ -19,12 +19,17 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
           |SERVER_PORT=2456
           |WORLD_NAME=Dedicated
           |SERVER_PASS=secret
-          |SERVER_PUBLIC=true""".stripMargin),
+          |SERVER_PUBLIC=true
+          |DISCORD_WEBHOOK=https://discord.com/api/webhooks/930166932420829224/K7uJCinEs4PAEdRgJf07EXrOMiDpK7NmGJVSpxPtUdEvDYYehHwo0pan29nHpOO7U9db
+          |POST_SERVER_LISTENING_HOOK=curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"Valheim server started\"}" "$DISCORD_WEBHOOK"
+          |PRE_SERVER_SHUTDOWN_HOOK=curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"Valheim server shutting down\"}" "$DISCORD_WEBHOOK"
+          |""".stripMargin),
       InitFile.fromUrl("/etc/systemd/system/valheim.service", "https://raw.githubusercontent.com/lloesche/valheim-server-docker/main/valheim.service"),
       InitCommand.shellCommand(
         """systemctl daemon-reload
           |systemctl enable valheim.service
-          |systemctl start valheim.service""".stripMargin)
+          |systemctl start valheim.service
+          |""".stripMargin)
     ))
     .build
   // allow incoming traffic

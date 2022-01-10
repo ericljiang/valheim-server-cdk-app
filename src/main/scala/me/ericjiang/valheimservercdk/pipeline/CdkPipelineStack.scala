@@ -20,10 +20,8 @@ class CdkPipelineStack(scope: Construct, id: String, props: StackProps = null) e
     .build
 
   // https://docs.aws.amazon.com/cdk/v2/guide/cdk_pipeline.html
-  private val pipeline = CodePipeline.Builder
-    .create(this, "pipeline")
-    .synth(ShellStep.Builder
-      .create("Synth")
+  private val pipeline = CodePipeline.Builder.create(this, "pipeline")
+    .synth(ShellStep.Builder.create("Synth")
       .input(CodePipelineSource.connection("ericljiang/valheim-server-cdk-app", "main", ConnectionSourceOptions.builder
         .connectionArn(codeStarConnection.getAttrConnectionArn)
         .build))
