@@ -7,7 +7,10 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
   // create instance
   private val instance = Instance.Builder.create(this, "Instance")
     .instanceType(InstanceType.of(InstanceClass.BURSTABLE3_AMD, InstanceSize.MEDIUM))
-    .machineImage(MachineImage.latestAmazonLinux)
+    .machineImage(MachineImage.latestAmazonLinux(AmazonLinuxImageProps.builder
+      .generation(AmazonLinuxGeneration.AMAZON_LINUX_2)
+      .cachedInContext(true)
+      .build))
     .vpc(Vpc.fromLookup(this, "DefaultVpc", VpcLookupOptions.builder.isDefault(true).build))
     .init(CloudFormationInit.fromElements(
       InitPackage.yum("docker"),
