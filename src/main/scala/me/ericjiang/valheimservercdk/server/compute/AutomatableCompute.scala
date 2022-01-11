@@ -1,5 +1,6 @@
 package me.ericjiang.valheimservercdk.server.compute
 
+import software.amazon.awscdk.Stack
 import software.amazon.awscdk.services.ec2._
 import software.amazon.awscdk.services.iam.{Effect, PolicyStatement}
 import software.amazon.awscdk.services.s3.Bucket
@@ -20,6 +21,7 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
     .vpc(Vpc.fromLookup(this, "DefaultVpc", VpcLookupOptions.builder.isDefault(true).build))
     .init(CloudFormationInit.fromElements(
       InitPackage.yum("docker"),
+      InitPackage.yum("jq"),
       InitFile.fromString("/etc/sysconfig/valheim-server",
         raw"""SERVER_NAME=Yeah
              |SERVER_PORT=2456
@@ -68,6 +70,15 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
           |[Install]
           |WantedBy=multi-user.target
           |""".stripMargin),
+      InitFile.fromString("/usr/local/bin/put-player-count-metric.sh",
+        raw"""aws cloudwatch put-metric-data \
+             |  --region ${Stack.of(this).getRegion} \
+             |  --metric-name PlayerCount \
+             |  --namespace ValheimServer \
+             |  --value $$(curl -s localhost:80/status.json | jq '.player_count')
+             |""".stripMargin),
+      InitFile.fromString("/etc/cron.d/put-player-count-metric",
+        "*/5 * * * * root /bin/sh /usr/local/bin/put-player-count-metric.sh"),
       InitCommand.shellCommand(
         """systemctl daemon-reload
           |systemctl enable valheim.service
@@ -86,6 +97,11 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
   backupBucket.grantPut(instance)
   instance.addToRolePolicy(PolicyStatement.Builder.create
     .actions(Seq("logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents").asJava)
+    .effect(Effect.ALLOW)
+    .resources(Seq("*").asJava)
+    .build)
+  instance.addToRolePolicy(PolicyStatement.Builder.create
+    .actions(Seq("cloudwatch:PutMetricData").asJava)
     .effect(Effect.ALLOW)
     .resources(Seq("*").asJava)
     .build)
