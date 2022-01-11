@@ -18,11 +18,12 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
     .init(CloudFormationInit.fromElements(
       InitPackage.yum("docker"),
       InitFile.fromString("/etc/sysconfig/valheim-server",
-        raw"""SERVER_NAME=My Server
+        raw"""SERVER_NAME=Yeah
              |SERVER_PORT=2456
-             |WORLD_NAME=Dedicated
-             |SERVER_PASS=secret
+             |WORLD_NAME=yeahh
+             |SERVER_PASS=yeahh
              |SERVER_PUBLIC=true
+             |STATUS_HTTP=true
              |DISCORD_WEBHOOK=https://discord.com/api/webhooks/930203489722826813/9r6qTG5_n162Fb2u6yISOvDh9GZ2kVdXKvCWGYUMKHUjTuMfGXOTE58w2gwYYOnhuZGD
              |POST_BOOTSTRAP_HOOK=apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install awscli
              |POST_SERVER_LISTENING_HOOK=curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"Valheim server started\"}" "$$DISCORD_WEBHOOK"
@@ -30,18 +31,51 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
              |POST_BACKUP_HOOK=aws s3 cp @BACKUP_FILE@ s3://${backupBucket.getBucketName}/
              |PRE_SERVER_SHUTDOWN_HOOK=supervisorctl signal HUP valheim-backup && sleep 60
              |""".stripMargin),
-      InitFile.fromUrl("/etc/systemd/system/valheim.service", "https://raw.githubusercontent.com/lloesche/valheim-server-docker/main/valheim.service"),
+      InitFile.fromString("/etc/systemd/system/valheim.service",
+        // Modified from https://github.com/lloesche/valheim-server-docker/blob/main/valheim.service
+        """[Unit]
+          |Description=Valheim Server
+          |After=docker.service
+          |Requires=docker.service
+          |ConditionPathExists=/etc/sysconfig/valheim-server
+          |
+          |[Service]
+          |TimeoutStartSec=0
+          |ExecStartPre=-/usr/bin/docker stop %n
+          |ExecStartPre=-/usr/bin/docker rm %n
+          |ExecStart=/usr/bin/docker run \
+          |          --name %n \
+          |          --pull=always \
+          |          --rm \
+          |          --cap-add=sys_nice \
+          |          --stop-timeout 120 \
+          |          -v /etc/valheim:/config:Z \
+          |          -v /opt/valheim:/opt/valheim:Z \
+          |          -p 2456-2457:2456-2457/udp \
+          |          -p 80/tcp \
+          |          --env-file /etc/sysconfig/valheim-server \
+          |          ghcr.io/lloesche/valheim-server
+          |ExecStop=/usr/bin/docker stop %n
+          |Restart=always
+          |RestartSec=10s
+          |
+          |[Install]
+          |WantedBy=multi-user.target
+          |""".stripMargin),
       InitCommand.shellCommand(
         """systemctl daemon-reload
           |systemctl enable valheim.service
           |systemctl start valheim.service
           |""".stripMargin)
     ))
+    // Recreate instance to apply changes. Use in development only!
+    .initOptions(ApplyCloudFormationInitOptions.builder.embedFingerprint(true).build)
+    .userDataCausesReplacement(true)
     .build
 
   // allow incoming traffic
   instance.getConnections.allowFromAnyIpv4(Port.tcp(22), "ssh")
-  instance.getConnections.allowFromAnyIpv4(Port.udpRange(2456, 2458), "valheim")
+  instance.getConnections.allowFromAnyIpv4(Port.udpRange(2456, 2457), "valheim")
   // grant access to backup bucket
   backupBucket.grantPut(instance)
 }
