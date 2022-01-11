@@ -1,7 +1,7 @@
 package me.ericjiang.valheimservercdk.pipeline
 
 import me.ericjiang.valheimservercdk.Environments
-import software.amazon.awscdk.pipelines.{CodePipeline, CodePipelineSource, ConnectionSourceOptions, ShellStep}
+import software.amazon.awscdk.pipelines.{CodePipeline, CodePipelineSource, ConnectionSourceOptions, ManualApprovalStep, ShellStep}
 import software.amazon.awscdk.services.codestarconnections.CfnConnection
 import software.amazon.awscdk.{Stack, StackProps, StageProps}
 import software.constructs.Construct
@@ -29,5 +29,7 @@ class CdkPipelineStack(scope: Construct, id: String, props: StackProps = null) e
       .build)
     .build
 
+  pipeline.addStage(new ServerStage(this, "ValheimServerBeta", StageProps.builder.env(Environments.Default).build))
   pipeline.addStage(new ServerStage(this, "ValheimServerProd", StageProps.builder.env(Environments.Default).build))
+    .addPre(new ManualApprovalStep("PromoteToProd"))
 }
