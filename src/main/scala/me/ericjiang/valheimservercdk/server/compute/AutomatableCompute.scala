@@ -85,7 +85,7 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
   // permissions
   backupBucket.grantPut(instance)
   instance.addToRolePolicy(PolicyStatement.Builder.create
-    .actions(Seq("logs:CreateLogStream", "logs:PutLogEvents").asJava)
+    .actions(Seq("logs:CreateLogGroup", "logs:PutLogEvents").asJava)
     .effect(Effect.ALLOW)
     .resources(Seq("*").asJava)
     .build)
