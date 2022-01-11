@@ -47,9 +47,9 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
           |ExecStartPre=-/usr/bin/docker stop %n
           |ExecStartPre=-/usr/bin/docker rm %n
           |ExecStart=/usr/bin/docker run \
-          |          --log-driver=awslogs
-          |          --log-opt awslogs-group=ValheimServer
-          |          --log-opt awslogs-create-group=true
+          |          --log-driver=awslogs \
+          |          --log-opt awslogs-group=ValheimServer \
+          |          --log-opt awslogs-create-group=true \
           |          --name %n \
           |          --pull=always \
           |          --rm \
