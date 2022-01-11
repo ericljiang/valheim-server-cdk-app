@@ -1,8 +1,11 @@
 package me.ericjiang.valheimservercdk.server.compute
 
 import software.amazon.awscdk.services.ec2._
+import software.amazon.awscdk.services.iam.{Effect, PolicyStatement}
 import software.amazon.awscdk.services.s3.Bucket
 import software.constructs.Construct
+
+import scala.jdk.CollectionConverters.SeqHasAsJava
 
 class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, id) {
   private val backupBucket = new Bucket(this, "BackupBucket")
@@ -44,6 +47,9 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
           |ExecStartPre=-/usr/bin/docker stop %n
           |ExecStartPre=-/usr/bin/docker rm %n
           |ExecStart=/usr/bin/docker run \
+          |          --log-driver=awslogs
+          |          --log-opt awslogs-group=ValheimServer
+          |          --log-opt awslogs-create-group=true
           |          --name %n \
           |          --pull=always \
           |          --rm \
@@ -76,6 +82,11 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
   // allow incoming traffic
   instance.getConnections.allowFromAnyIpv4(Port.tcp(22), "ssh")
   instance.getConnections.allowFromAnyIpv4(Port.udpRange(2456, 2457), "valheim")
-  // grant access to backup bucket
+  // permissions
   backupBucket.grantPut(instance)
+  instance.addToRolePolicy(PolicyStatement.Builder.create
+    .actions(Seq("logs:CreateLogStream", "logs:PutLogEvents").asJava)
+    .effect(Effect.ALLOW)
+    .resources(Seq("*").asJava)
+    .build)
 }
