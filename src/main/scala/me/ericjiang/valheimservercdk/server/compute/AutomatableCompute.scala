@@ -24,7 +24,7 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
              |SERVER_PASS=secret
              |SERVER_PUBLIC=true
              |DISCORD_WEBHOOK=https://discord.com/api/webhooks/930203489722826813/9r6qTG5_n162Fb2u6yISOvDh9GZ2kVdXKvCWGYUMKHUjTuMfGXOTE58w2gwYYOnhuZGD
-             |POST_BOOTSTRAP_HOOK="apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install awscli"
+             |POST_BOOTSTRAP_HOOK=apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install awscli
              |POST_SERVER_LISTENING_HOOK=curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"Valheim server started\"}" "$$DISCORD_WEBHOOK"
              |PRE_SERVER_SHUTDOWN_HOOK=curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"Valheim server shutting down\"}" "$$DISCORD_WEBHOOK"
              |POST_BACKUP_HOOK=aws s3 cp @BACKUP_FILE@ s3://${backupBucket.getBucketName}/
@@ -38,6 +38,7 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
           |""".stripMargin)
     ))
     .build
+
   // allow incoming traffic
   instance.getConnections.allowFromAnyIpv4(Port.tcp(22), "ssh")
   instance.getConnections.allowFromAnyIpv4(Port.udpRange(2456, 2458), "valheim")
