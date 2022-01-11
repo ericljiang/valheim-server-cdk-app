@@ -29,6 +29,7 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
              |SERVER_PASS=yeah1234
              |SERVER_PUBLIC=true
              |STATUS_HTTP=true
+             |BACKUPS_CRON=*/30 * * * *
              |DISCORD_WEBHOOK=https://discord.com/api/webhooks/930203489722826813/9r6qTG5_n162Fb2u6yISOvDh9GZ2kVdXKvCWGYUMKHUjTuMfGXOTE58w2gwYYOnhuZGD
              |POST_BOOTSTRAP_HOOK=apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install awscli
              |POST_SERVER_LISTENING_HOOK=curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"Valheim server started\"}" "$$DISCORD_WEBHOOK"
