@@ -52,7 +52,7 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
           |          -v /etc/valheim:/config:Z \
           |          -v /opt/valheim:/opt/valheim:Z \
           |          -p 2456-2457:2456-2457/udp \
-          |          -p 80/tcp \
+          |          -p 80:80/tcp \
           |          --env-file /etc/sysconfig/valheim-server \
           |          ghcr.io/lloesche/valheim-server
           |ExecStop=/usr/bin/docker stop %n
