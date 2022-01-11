@@ -21,7 +21,7 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
         raw"""SERVER_NAME=Yeah
              |SERVER_PORT=2456
              |WORLD_NAME=yeahh
-             |SERVER_PASS=yeahh
+             |SERVER_PASS=yeah1234
              |SERVER_PUBLIC=true
              |STATUS_HTTP=true
              |DISCORD_WEBHOOK=https://discord.com/api/webhooks/930203489722826813/9r6qTG5_n162Fb2u6yISOvDh9GZ2kVdXKvCWGYUMKHUjTuMfGXOTE58w2gwYYOnhuZGD
