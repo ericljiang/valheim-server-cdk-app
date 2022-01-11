@@ -78,7 +78,8 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
              |  --value $$(curl -s localhost:80/status.json | jq '.player_count')
              |""".stripMargin),
       InitFile.fromString("/etc/cron.d/put-player-count-metric",
-        "*/5 * * * * root /bin/sh /usr/local/bin/put-player-count-metric.sh"),
+        """*/5 * * * * root /bin/sh /usr/local/bin/put-player-count-metric.sh
+          |""".stripMargin),
       InitCommand.shellCommand(
         """systemctl daemon-reload
           |systemctl enable valheim.service
