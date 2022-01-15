@@ -1,14 +1,16 @@
 package me.ericjiang.valheimservercdk.server.compute
 
-import software.amazon.awscdk.{Stack, Stage}
+import software.amazon.awscdk.services.cloudwatch.{Alarm, ComparisonOperator, Metric}
 import software.amazon.awscdk.services.ec2._
 import software.amazon.awscdk.services.iam.{Effect, PolicyStatement}
+import software.amazon.awscdk.services.lambda
 import software.amazon.awscdk.services.s3.Bucket
+import software.amazon.awscdk.{Duration, Stack, Stage}
 import software.constructs.Construct
 
-import scala.jdk.CollectionConverters.SeqHasAsJava
+import scala.jdk.CollectionConverters._
 
-class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, id) {
+class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, id) with AutomatableGameServer {
   private val backupBucket = new Bucket(this, "BackupBucket")
 
   // create instance
@@ -43,4 +45,24 @@ class AutomatableCompute(scope: Construct, id: String) extends Construct(scope, 
     .effect(Effect.ALLOW)
     .resources(Seq("*").asJava)
     .build)
+
+  override def startFunction: lambda.Function = ???
+
+  override def stopFunction: lambda.Function = ???
+
+  override def statusFunction: lambda.Function = ???
+
+  override val idleAlarm: Alarm = Alarm.Builder.create(this, "IdleAlarm")
+    .alarmDescription("Indicates that the server is idle and can be shut down.")
+    .metric(Metric.Builder.create
+      .namespace("ValheimServer")
+      .metricName("PlayerCount")
+      .dimensionsMap(Map("Stage" -> Stage.of(this).getStageName).asJava)
+      .period(Duration.minutes(5))
+      .statistic("max")
+      .build)
+    .comparisonOperator(ComparisonOperator.LESS_THAN_OR_EQUAL_TO_THRESHOLD)
+    .threshold(0)
+    .evaluationPeriods(12)
+    .build
 }

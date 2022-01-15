@@ -1,11 +1,11 @@
 package me.ericjiang.valheimservercdk.server
 
 import me.ericjiang.valheimservercdk.server.automation.api.ClientApi
-import me.ericjiang.valheimservercdk.server.compute.AutomatableCompute
+import me.ericjiang.valheimservercdk.server.compute.ValheimEc2Instance
 import software.amazon.awscdk.{Stack, StackProps}
 import software.constructs.Construct
 
-class ServerAutomationStack(scope: Construct, id: String, props: StackProps = null) extends Stack(scope, id, props) {
+class AutomatedServerStack(scope: Construct, id: String, props: StackProps = null) extends Stack(scope, id, props) {
   new ClientApi(this, "api")
-  new AutomatableCompute(this, "compute")
+  new ValheimEc2Instance(this, "compute")
 }
