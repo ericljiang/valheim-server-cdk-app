@@ -35,7 +35,7 @@ object ValheimCloudFormationInit {
            |ExecStartPre=-/usr/bin/docker rm %n
            |ExecStart=/usr/bin/docker run \
            |          --log-driver=awslogs \
-           |          --log-opt awslogs-group=ValheimServer \
+           |          --log-opt awslogs-group=$stageName/application \
            |          --log-opt awslogs-create-group=true \
            |          --name %n \
            |          --pull=always \
