@@ -1,9 +1,11 @@
 package me.ericjiang.valheimservercdk.server.compute
 
+import me.ericjiang.valheimservercdk.util.CdkUtils.InstanceExtensions
 import software.amazon.awscdk.services.cloudwatch.{Alarm, ComparisonOperator, Metric}
 import software.amazon.awscdk.services.ec2._
 import software.amazon.awscdk.services.iam.{Effect, PolicyStatement}
 import software.amazon.awscdk.services.lambda
+import software.amazon.awscdk.services.lambda.{Function, InlineCode, Runtime}
 import software.amazon.awscdk.services.s3.Bucket
 import software.amazon.awscdk.{Duration, Stack, Stage}
 import software.constructs.Construct
@@ -48,7 +50,27 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
 
   override def startFunction: lambda.Function = ???
 
-  override def stopFunction: lambda.Function = ???
+  override val stopFunction: lambda.Function = {
+    val function = Function.Builder.create(this, "StopServer")
+      .runtime(Runtime.NODEJS_14_X)
+      .handler("index.handler")
+      .code(new InlineCode(
+        """const { EC2Client, StopInstancesCommand } = require("@aws-sdk/client-ec2");
+          |const client = new EC2Client(config);
+          |const command = new StopInstancesCommand({
+          |    InstanceIds: [process.env.INSTANCE_ID]
+          |});
+          |exports.handler = async (event) => await client.send(command);
+          |""".stripMargin))
+      .environment(Map("INSTANCE_ID" -> instance.getInstanceId).asJava)
+      .build
+    function.addToRolePolicy(PolicyStatement.Builder.create
+      .actions(Seq().asJava)
+      .effect(Effect.ALLOW)
+      .resources(Seq(instance.getArn).asJava)
+      .build)
+    function
+  }
 
   override def statusFunction: lambda.Function = ???
 
