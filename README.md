@@ -2,10 +2,19 @@
 
 ## TODO
 - [x] Self-mutating CDK pipeline
-- [ ] Game server on EC2/Fargate
-- [ ] Client API
-- [ ] Auto shutdown
-- [ ] UI client
+- [x] Beta and Prod stages
+- [x] Game server on EC2/Fargate
+  - [x] Logs in CloudWatch
+  - [x] Player count metric in CloudWatch
+    - [ ] Add dimension to differentiate Beta and Prod
+  - [ ] Server lifecycle hooks to SNS
+  - [ ] Auto shutdown when idle
+  - [ ] Persistent save file in S3?
+- [ ] Web client
+  - [ ] API
+    - [ ] Start server
+    - [ ] Get status
+  - [ ] UI
 - [ ] Discord notifications
 
 ## Useful commands
