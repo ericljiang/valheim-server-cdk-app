@@ -65,7 +65,7 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
       .environment(Map("INSTANCE_ID" -> instance.getInstanceId).asJava)
       .build
     function.addToRolePolicy(PolicyStatement.Builder.create
-      .actions(Seq().asJava)
+      .actions(Seq("ec2:StopInstances").asJava)
       .effect(Effect.ALLOW)
       .resources(Seq(instance.getArn).asJava)
       .build)
