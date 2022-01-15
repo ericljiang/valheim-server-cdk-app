@@ -60,7 +60,7 @@ object ValheimCloudFormationInit {
            |  --region $region \
            |  --metric-name PlayerCount \
            |  --namespace ValheimServer \
-           |  --dimensions Stage=$stageName
+           |  --dimensions Stage=$stageName \
            |  --value $$(curl -s localhost:80/status.json | jq '.player_count')
            |""".stripMargin),
     InitFile.fromString("/etc/cron.d/put-player-count-metric",
