@@ -55,12 +55,10 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
       .runtime(Runtime.NODEJS_14_X)
       .handler("index.handler")
       .code(new InlineCode(
-        """const { EC2Client, StopInstancesCommand } = require("@aws-sdk/client-ec2");
-          |const client = new EC2Client(config);
-          |const command = new StopInstancesCommand({
-          |    InstanceIds: [process.env.INSTANCE_ID]
-          |});
-          |exports.handler = async (event) => await client.send(command);
+        """const EC2 = require('aws-sdk/clients/ec2');
+          |const ec2 = new EC2();
+          |const params = { InstanceIds: [process.env.INSTANCE_ID] };
+          |exports.handler = async (event) => await ec2.stopInstances(params).promise();
           |""".stripMargin))
       .environment(Map("INSTANCE_ID" -> instance.getInstanceId).asJava)
       .build
