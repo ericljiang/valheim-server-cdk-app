@@ -1,0 +1,31 @@
+# Modified from https://github.com/lloesche/valheim-server-docker/blob/main/valheim.service
+[Unit]
+Description=Valheim Server
+After=docker.service
+Requires=docker.service
+ConditionPathExists=/etc/sysconfig/valheim-server
+[Service]
+EnvironmentFile=/etc/sysconfig/valheim-service
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker stop %n
+ExecStartPre=-/usr/bin/docker rm %n
+ExecStart=/usr/bin/docker run \
+          --log-driver=awslogs \
+          --log-opt awslogs-group=$STAGE_NAME/application \
+          --log-opt awslogs-create-group=true \
+          --name %n \
+          --pull=always \
+          --rm \
+          --cap-add=sys_nice \
+          --stop-timeout 120 \
+          -v /etc/valheim:/config:Z \
+          -v /opt/valheim:/opt/valheim:Z \
+          -p 2456-2457:2456-2457/udp \
+          -p 80:80/tcp \
+          --env-file /etc/sysconfig/valheim-server \
+          ghcr.io/lloesche/valheim-server
+ExecStop=/usr/bin/docker stop %n
+Restart=always
+RestartSec=10s
+[Install]
+WantedBy=multi-user.target

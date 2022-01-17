@@ -1,29 +1,26 @@
 package me.ericjiang.valheimservercdk.server.compute
 
-import me.ericjiang.valheimservercdk.util.CdkUtils.InstanceExtensions
-import software.amazon.awscdk.services.cloudwatch.{Alarm, ComparisonOperator, Metric}
+import software.amazon.awscdk.services.cloudwatch.Metric
 import software.amazon.awscdk.services.ec2._
 import software.amazon.awscdk.services.iam.{Effect, PolicyStatement}
-import software.amazon.awscdk.services.lambda
-import software.amazon.awscdk.services.lambda.{Function, InlineCode, Runtime}
 import software.amazon.awscdk.services.s3.Bucket
 import software.amazon.awscdk.{Duration, Stack, Stage}
 import software.constructs.Construct
 
 import scala.jdk.CollectionConverters._
 
-class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, id) with AutomatableGameServer {
-  private val backupBucket = new Bucket(this, "BackupBucket")
+class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, id) {
+  val backupBucket = new Bucket(this, "BackupBucket")
 
   // create instance
-  private val instance = Instance.Builder.create(this, "Instance")
+  val instance: Instance = Instance.Builder.create(this, "Instance")
     .instanceType(InstanceType.of(InstanceClass.BURSTABLE3_AMD, InstanceSize.MEDIUM))
     .machineImage(MachineImage.latestAmazonLinux(AmazonLinuxImageProps.builder
       .generation(AmazonLinuxGeneration.AMAZON_LINUX_2)
       .cachedInContext(true)
       .build))
     .vpc(Vpc.fromLookup(this, "DefaultVpc", VpcLookupOptions.builder.isDefault(true).build))
-    .init(ValheimCloudFormationInit(
+    .init(cloudFormationInit(
       stageName = Stage.of(this).getStageName,
       backupBucketName = backupBucket.getBucketName,
       region = Stack.of(this).getRegion))
@@ -48,41 +45,45 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
     .resources(Seq("*").asJava)
     .build)
 
-  override def startFunction: lambda.Function = ???
-
-  override val stopFunction: lambda.Function = {
-    val function = Function.Builder.create(this, "StopServer")
-      .runtime(Runtime.NODEJS_14_X)
-      .handler("index.handler")
-      .code(new InlineCode(
-        """const EC2 = require('aws-sdk/clients/ec2');
-          |const ec2 = new EC2();
-          |const params = { InstanceIds: [process.env.INSTANCE_ID] };
-          |exports.handler = async (event) => await ec2.stopInstances(params).promise();
-          |""".stripMargin))
-      .environment(Map("INSTANCE_ID" -> instance.getInstanceId).asJava)
-      .build
-    function.addToRolePolicy(PolicyStatement.Builder.create
-      .actions(Seq("ec2:StopInstances").asJava)
-      .effect(Effect.ALLOW)
-      .resources(Seq(instance.getArn).asJava)
-      .build)
-    function
-  }
-
-  override def statusFunction: lambda.Function = ???
-
-  override val idleAlarm: Alarm = Alarm.Builder.create(this, "IdleAlarm")
-    .alarmDescription("Indicates that the server is idle and can be shut down.")
-    .metric(Metric.Builder.create
-      .namespace("ValheimServer")
-      .metricName("PlayerCount")
-      .dimensionsMap(Map("Stage" -> Stage.of(this).getStageName).asJava)
-      .period(Duration.minutes(5))
-      .statistic("max")
-      .build)
-    .comparisonOperator(ComparisonOperator.LESS_THAN_OR_EQUAL_TO_THRESHOLD)
-    .threshold(0)
-    .evaluationPeriods(12)
+  val playerCountMetric: Metric = Metric.Builder.create
+    .namespace("ValheimServer")
+    .metricName("PlayerCount")
+    .dimensionsMap(Map("Stage" -> Stage.of(this).getStageName).asJava)
+    .period(Duration.minutes(5))
+    .statistic("max")
     .build
+
+  private def cloudFormationInit(stageName: String, backupBucketName: String, region: String): CloudFormationInit =
+    CloudFormationInit.fromElements(
+      InitPackage.yum("docker"),
+      InitPackage.yum("jq"),
+      // Environment variables used inside Docker container
+      InitFile.fromString("/etc/sysconfig/valheim-server",
+        raw"""SERVER_NAME=Yeah
+             |SERVER_PORT=2456
+             |WORLD_NAME=yeahh
+             |SERVER_PASS=yeah1234
+             |SERVER_PUBLIC=true
+             |STATUS_HTTP=true
+             |BACKUPS_CRON=*/30 * * * *
+             |DISCORD_WEBHOOK=https://discord.com/api/webhooks/930203489722826813/9r6qTG5_n162Fb2u6yISOvDh9GZ2kVdXKvCWGYUMKHUjTuMfGXOTE58w2gwYYOnhuZGD
+             |POST_BOOTSTRAP_HOOK=apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install awscli
+             |POST_SERVER_LISTENING_HOOK=curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"Valheim server started\"}" "$$DISCORD_WEBHOOK"
+             |POST_BACKUP_HOOK=aws s3 cp @BACKUP_FILE@ s3://$backupBucketName/
+             |PRE_SERVER_SHUTDOWN_HOOK=supervisorctl signal HUP valheim-backup && sleep 60
+             |POST_SERVER_SHUTDOWN_HOOK=aws s3 cp @BACKUP_FILE@ s3://$backupBucketName/
+             |""".stripMargin),
+      // Environment variables used in systemd unit that runs the Docker container
+      InitFile.fromString("/etc/sysconfig/valheim-service", s"STAGE_NAME=$stageName"),
+      InitFile.fromFileInline("/etc/systemd/system/valheim.service", "src/main/resources/valheim.service"),
+      InitFile.fromFileInline("/usr/local/bin/put-player-count-metric.sh", "src/main/resources/put-player-count-metric.sh"),
+      InitFile.fromString("/etc/cron.d/put-player-count-metric",
+        s"""*/5 * * * * root REGION=$region STAGE_NAME=$stageName /usr/local/bin/put-player-count-metric.sh
+           |""".stripMargin), // Newline required at end of file
+      InitCommand.shellCommand(
+        """systemctl daemon-reload
+          |systemctl enable valheim.service
+          |systemctl start valheim.service
+          |""".stripMargin)
+    )
 }
