@@ -11,7 +11,7 @@ ExecStartPre=-/usr/bin/docker stop %n
 ExecStartPre=-/usr/bin/docker rm %n
 ExecStart=/usr/bin/docker run \
           --log-driver=awslogs \
-          --log-opt awslogs-group=$STAGE_NAME/application \
+          --log-opt awslogs-group=${STAGE_NAME}/application \
           --log-opt awslogs-create-group=true \
           --name %n \
           --pull=always \

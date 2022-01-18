@@ -74,7 +74,9 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
              |POST_SERVER_SHUTDOWN_HOOK=aws s3 cp @BACKUP_FILE@ s3://$backupBucketName/
              |""".stripMargin),
       // Environment variables used in systemd unit that runs the Docker container
-      InitFile.fromString("/etc/sysconfig/valheim-service", s"STAGE_NAME=$stageName"),
+      InitFile.fromString("/etc/sysconfig/valheim-service",
+        s"""STAGE_NAME=$stageName
+           |""".stripMargin),
       InitFile.fromFileInline("/etc/systemd/system/valheim.service", "src/main/resources/valheim.service"),
       InitFile.fromFileInline("/usr/local/bin/put-player-count-metric.sh", "src/main/resources/put-player-count-metric.sh"),
       InitFile.fromString("/etc/cron.d/put-player-count-metric",
