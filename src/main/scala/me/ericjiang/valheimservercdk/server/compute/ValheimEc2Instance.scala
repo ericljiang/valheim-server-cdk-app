@@ -2,7 +2,7 @@ package me.ericjiang.valheimservercdk.server.compute
 
 import software.amazon.awscdk.services.cloudwatch.Metric
 import software.amazon.awscdk.services.ec2._
-import software.amazon.awscdk.services.iam.{Effect, PolicyStatement}
+import software.amazon.awscdk.services.iam.{Effect, ManagedPolicy, PolicyStatement}
 import software.amazon.awscdk.services.s3.Bucket
 import software.amazon.awscdk.{Duration, Stack, Stage}
 import software.constructs.Construct
@@ -44,6 +44,7 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
     .effect(Effect.ALLOW)
     .resources(Seq("*").asJava)
     .build)
+  instance.getRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName("CloudWatchAgentServerPolicy"))
 
   val playerCountMetric: Metric = Metric.Builder.create
     .namespace("ValheimServer")
@@ -55,6 +56,7 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
 
   private def cloudFormationInit(stageName: String, backupBucketName: String, region: String): CloudFormationInit =
     CloudFormationInit.fromElements(
+      InitPackage.yum("amazon-cloudwatch-agent"),
       InitPackage.yum("docker"),
       InitPackage.yum("jq"),
       // Environment variables used inside Docker container
@@ -82,8 +84,28 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
       InitFile.fromString("/etc/cron.d/put-player-count-metric",
         s"""*/5 * * * * root REGION=$region STAGE_NAME=$stageName /usr/local/bin/put-player-count-metric.sh
            |""".stripMargin), // Newline required at end of file
+      InitFile.fromString("/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
+        raw"""{
+             |  "metrics": {
+             |    "namespace": "$stageName",
+             |    "append_dimensions": {
+             |      "InstanceId": "$${aws: InstanceId}",
+             |      "InstanceType": "$${aws: InstanceType}"
+             |    },
+             |    "aggregation_dimensions": [["InstanceId"]],
+             |    "metrics_collected": {
+             |      "cpu": {
+             |        "resources": "*",
+             |        "totalcpu": true,
+             |        "measurement": ["cpu_usage_active"]
+             |      }
+             |    }
+             |  }
+             |}
+             |""".stripMargin),
       InitCommand.shellCommand(
-        """systemctl daemon-reload
+        """/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+          |systemctl daemon-reload
           |systemctl enable valheim.service
           |systemctl start valheim.service
           |""".stripMargin)
