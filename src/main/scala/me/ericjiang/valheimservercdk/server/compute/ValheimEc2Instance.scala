@@ -80,7 +80,10 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
         s"""STAGE_NAME=$stageName
            |""".stripMargin),
       InitFile.fromFileInline("/etc/systemd/system/valheim.service", "src/main/resources/valheim.service"),
-      InitFile.fromFileInline("/usr/local/bin/put-player-count-metric.sh", "src/main/resources/put-player-count-metric.sh"),
+      InitFile.fromFileInline(
+        "/usr/local/bin/put-player-count-metric.sh",
+        "src/main/resources/put-player-count-metric.sh",
+        InitFileOptions.builder.mode("000744").build),
       InitFile.fromString("/etc/cron.d/put-player-count-metric",
         s"""*/5 * * * * root REGION=$region STAGE_NAME=$stageName /usr/local/bin/put-player-count-metric.sh
            |""".stripMargin), // Newline required at end of file
