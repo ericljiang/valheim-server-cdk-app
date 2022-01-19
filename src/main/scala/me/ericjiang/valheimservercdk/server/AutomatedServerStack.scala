@@ -9,6 +9,6 @@ import scala.concurrent.duration.Duration
 
 class AutomatedServerStack(scope: Construct, id: String, props: StackProps = null, idleDuration: Duration)
   extends Stack(scope, id, props) {
-  new ClientApi(this, "api")
   val server: AutoStoppingGameServer = new AutoStoppingValheimServer(this, "Server", idleDuration)
+  new ClientApi(this, "api", server)
 }
