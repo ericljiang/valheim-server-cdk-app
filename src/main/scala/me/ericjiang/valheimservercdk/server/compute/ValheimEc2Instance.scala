@@ -10,6 +10,8 @@ import software.constructs.Construct
 import scala.jdk.CollectionConverters._
 
 class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, id) {
+  private val stage = Stage.of(this)
+
   val backupBucket = new Bucket(this, "BackupBucket")
 
   // create instance
@@ -21,7 +23,7 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
       .build))
     .vpc(Vpc.fromLookup(this, "DefaultVpc", VpcLookupOptions.builder.isDefault(true).build))
     .init(cloudFormationInit(
-      stageName = Stage.of(this).getStageName,
+      stageName = stage.getStageName,
       backupBucketName = backupBucket.getBucketName,
       region = Stack.of(this).getRegion))
     // Recreate instance to apply changes. Use in development only!
@@ -47,9 +49,9 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
   instance.getRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName("CloudWatchAgentServerPolicy"))
 
   val playerCountMetric: Metric = Metric.Builder.create
-    .namespace("ValheimServer")
+    .namespace(stage.getStageName)
     .metricName("PlayerCount")
-    .dimensionsMap(Map("Stage" -> Stage.of(this).getStageName).asJava)
+    .dimensionsMap(Map("InstanceId" -> instance.getInstanceId).asJava)
     .period(Duration.minutes(5))
     .statistic("max")
     .build
