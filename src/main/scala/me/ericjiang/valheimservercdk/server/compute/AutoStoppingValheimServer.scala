@@ -4,11 +4,16 @@ import software.amazon.awscdk.services.cloudwatch.actions.{Ec2Action, Ec2Instanc
 import software.amazon.awscdk.services.lambda
 import software.constructs.Construct
 
-class AutoStoppingValheimServer(scope: Construct, id: String) extends Construct(scope, id) with AutoStoppingGameServer {
+import scala.concurrent.duration.Duration
+
+class AutoStoppingValheimServer(scope: Construct, id: String, idleDuration: Duration)
+  extends Construct(scope, id) with AutoStoppingGameServer {
 
   private val valheimInstance = new ValheimEc2Instance(this, "Instance")
 
-  private val idleAlarm = new PlayerCountBasedIdleAlarm(this, "IdleAlarm", valheimInstance.playerCountMetric)
+  private val idleAlarm = new PlayerCountBasedIdleAlarm(this, "IdleAlarm",
+    playerCountMetric = valheimInstance.playerCountMetric,
+    idleDuration = idleDuration)
   idleAlarm.alarm.addAlarmAction(new Ec2Action(Ec2InstanceAction.STOP))
 
   override val startFunction: lambda.Function =

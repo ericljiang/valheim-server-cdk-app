@@ -6,6 +6,7 @@ import software.amazon.awscdk.services.codestarconnections.CfnConnection
 import software.amazon.awscdk.{Stack, StackProps, StageProps}
 import software.constructs.Construct
 
+import scala.concurrent.duration.DurationInt
 import scala.jdk.CollectionConverters._
 
 /**
@@ -29,7 +30,11 @@ class CdkPipelineStack(scope: Construct, id: String, props: StackProps = null) e
       .build)
     .build
 
-  pipeline.addStage(new ServerStage(this, "ValheimServerBeta", StageProps.builder.env(Environments.Default).build))
-  pipeline.addStage(new ServerStage(this, "ValheimServerProd", StageProps.builder.env(Environments.Default).build))
-    .addPre(new ManualApprovalStep("PromoteToProd"))
+  private val beta = pipeline.addStage(new ServerStage(this, "ValheimServerBeta",
+    props = StageProps.builder.env(Environments.Default).build,
+    idleDuration = 10.minutes))
+  private val prod = pipeline.addStage(new ServerStage(this, "ValheimServerProd",
+    props = StageProps.builder.env(Environments.Default).build,
+    idleDuration = 1.hour))
+  prod.addPre(new ManualApprovalStep("PromoteToProd"))
 }

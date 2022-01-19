@@ -4,6 +4,9 @@ import me.ericjiang.valheimservercdk.server.AutomatedServerStack
 import software.amazon.awscdk.{Stage, StageProps}
 import software.constructs.Construct
 
-class ServerStage(scope: Construct, id: String, props: StageProps = null) extends Stage(scope, id, props) {
-  new AutomatedServerStack(this, "ServerStack")
+import scala.concurrent.duration.Duration
+
+class ServerStage(scope: Construct, id: String, props: StageProps = null, idleDuration: Duration)
+  extends Stage(scope, id, props) {
+  new AutomatedServerStack(this, "ServerStack", idleDuration = idleDuration)
 }

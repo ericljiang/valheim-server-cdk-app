@@ -5,7 +5,10 @@ import me.ericjiang.valheimservercdk.server.compute.{AutoStoppingGameServer, Aut
 import software.amazon.awscdk.{Stack, StackProps}
 import software.constructs.Construct
 
-class AutomatedServerStack(scope: Construct, id: String, props: StackProps = null) extends Stack(scope, id, props) {
+import scala.concurrent.duration.Duration
+
+class AutomatedServerStack(scope: Construct, id: String, props: StackProps = null, idleDuration: Duration)
+  extends Stack(scope, id, props) {
   new ClientApi(this, "api")
-  val server: AutoStoppingGameServer = new AutoStoppingValheimServer(this, "Server")
+  val server: AutoStoppingGameServer = new AutoStoppingValheimServer(this, "Server", idleDuration)
 }
