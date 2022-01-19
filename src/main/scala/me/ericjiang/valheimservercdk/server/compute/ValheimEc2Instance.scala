@@ -95,7 +95,7 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
              |      "InstanceId": "$${aws: InstanceId}",
              |      "InstanceType": "$${aws: InstanceType}"
              |    },
-             |    "aggregation_dimensions": [["InstanceId"]],
+             |    "aggregation_dimensions": [["InstanceId", "InstanceType"], ["InstanceId"]],
              |    "metrics_collected": {
              |      "cpu": {
              |        "resources": ["*"],
