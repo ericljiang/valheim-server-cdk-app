@@ -59,7 +59,7 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
       InitPackage.yum("amazon-cloudwatch-agent"),
       InitPackage.yum("docker"),
       InitPackage.yum("jq"),
-      InitPackage.yum("nc"),
+      InitPackage.yum("nmap-ncat"),
       // Environment variables used inside Docker container
       InitFile.fromString("/etc/sysconfig/valheim-server",
         raw"""SERVER_NAME=Yeah
@@ -86,8 +86,8 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
         "src/main/resources/put-player-count-metric.sh",
         InitFileOptions.builder.mode("000744").build),
       InitFile.fromString("/etc/cron.d/put-player-count-metric",
-        s"""*/5 * * * * root /usr/local/bin/put-player-count-metric.sh
-           |""".stripMargin), // Newline required at end of file
+        """*/5 * * * * root /usr/local/bin/put-player-count-metric.sh
+          |""".stripMargin), // Newline required at end of file
       InitFile.fromString("/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
         raw"""{
              |  "metrics": {
