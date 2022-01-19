@@ -92,8 +92,8 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
              |  "metrics": {
              |    "namespace": "$stageName",
              |    "append_dimensions": {
-             |      "InstanceId": "$${aws: InstanceId}",
-             |      "InstanceType": "$${aws: InstanceType}"
+             |      "InstanceId": "$${aws:InstanceId}",
+             |      "InstanceType": "$${aws:InstanceType}"
              |    },
              |    "aggregation_dimensions": [["InstanceId", "InstanceType"], ["InstanceId"]],
              |    "metrics_collected": {
