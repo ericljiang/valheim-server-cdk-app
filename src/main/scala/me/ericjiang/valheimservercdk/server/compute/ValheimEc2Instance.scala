@@ -34,6 +34,7 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
   // allow incoming traffic
   instance.getConnections.allowFromAnyIpv4(Port.tcp(22), "ssh")
   instance.getConnections.allowFromAnyIpv4(Port.udpRange(2456, 2457), "valheim")
+  instance.getConnections.allowFromAnyIpv4(Port.tcp(80), "Status API")
   // permissions
   backupBucket.grantPut(instance)
   instance.addToRolePolicy(PolicyStatement.Builder.create
@@ -82,10 +83,10 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
       InitFile.fromString("/etc/sysconfig/valheim-service",
         s"""STAGE_NAME=$stageName
            |""".stripMargin),
-      InitFile.fromFileInline("/etc/systemd/system/valheim.service", "src/main/resources/valheim.service"),
+      InitFile.fromFileInline("/etc/systemd/system/valheim.service", "src/main/resources/ec2/valheim.service"),
       InitFile.fromFileInline(
         "/usr/local/bin/put-player-count-metric.sh",
-        "src/main/resources/put-player-count-metric.sh",
+        "src/main/resources/ec2/put-player-count-metric.sh",
         InitFileOptions.builder.mode("000744").build),
       InitFile.fromString("/etc/cron.d/put-player-count-metric",
         """*/5 * * * * root /usr/local/bin/put-player-count-metric.sh

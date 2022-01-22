@@ -26,9 +26,9 @@ class ClientApi(scope: Construct, id: String, server: AutoStoppingGameServer) ex
     .methods(List(HttpMethod.POST).asJava)
     .integration(new HttpLambdaIntegration("StartServerIntegration", server.startFunction))
     .build)
-//  api.addRoutes(AddRoutesOptions.builder
-//    .path("/get-server-status")
-//    .methods(List(HttpMethod.POST).asJava)
-//    .integration(new HttpLambdaIntegration("GetServerStatusIntegration", server.statusFunction))
-//    .build)
+  api.addRoutes(AddRoutesOptions.builder
+    .path("/get-server-status")
+    .methods(List(HttpMethod.POST).asJava)
+    .integration(new HttpLambdaIntegration("GetServerStatusIntegration", server.statusFunction))
+    .build)
 }

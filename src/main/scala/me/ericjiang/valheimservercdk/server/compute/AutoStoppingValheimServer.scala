@@ -1,6 +1,7 @@
 package me.ericjiang.valheimservercdk.server.compute
 
 import software.amazon.awscdk.services.cloudwatch.actions.{Ec2Action, Ec2InstanceAction}
+import software.amazon.awscdk.services.ec2.Port
 import software.amazon.awscdk.services.lambda
 import software.constructs.Construct
 
@@ -19,5 +20,6 @@ class AutoStoppingValheimServer(scope: Construct, id: String, idleDuration: Dura
   override val startFunction: lambda.Function =
     new StartEc2InstanceFunction(this, "StartFunction", valheimInstance.instance).function
 
-  override def statusFunction: lambda.Function = ???
+  override def statusFunction: lambda.Function =
+    new ValheimStatusFunction(this, "StatusFunction", valheimInstance.instance).function
 }
