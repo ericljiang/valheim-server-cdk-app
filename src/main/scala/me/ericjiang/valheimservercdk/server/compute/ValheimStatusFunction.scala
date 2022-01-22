@@ -1,6 +1,5 @@
 package me.ericjiang.valheimservercdk.server.compute
 
-import me.ericjiang.valheimservercdk.util.CdkUtils.InstanceExtensions
 import software.amazon.awscdk.services.ec2.Instance
 import software.amazon.awscdk.services.iam.{Effect, PolicyStatement}
 import software.amazon.awscdk.services.lambda.{Code, Function, Runtime}
@@ -20,6 +19,6 @@ class ValheimStatusFunction(scope: Construct, id: String, instance: Instance) ex
   function.addToRolePolicy(PolicyStatement.Builder.create
     .actions(Seq("ec2:DescribeInstances").asJava)
     .effect(Effect.ALLOW)
-    .resources(Seq(instance.getArn).asJava)
+    .resources(Seq("*").asJava) // DescribeInstances does not support individual resources
     .build)
 }
