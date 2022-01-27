@@ -1,9 +1,12 @@
 package me.ericjiang.valheimservercdk.server.automation.api
 
+import me.ericjiang.valheimservercdk.server.automation.api.ClientApi._
 import me.ericjiang.valheimservercdk.server.compute.AutoStoppingGameServer
-import software.amazon.awscdk.{Duration, Stage}
-import software.amazon.awscdk.services.apigatewayv2.alpha.{AddRoutesOptions, CorsHttpMethod, CorsPreflightOptions, HttpApi, HttpMethod}
+import software.amazon.awscdk.services.apigatewayv2.alpha._
 import software.amazon.awscdk.services.apigatewayv2.integrations.alpha.HttpLambdaIntegration
+import software.amazon.awscdk.services.certificatemanager.{Certificate, CertificateValidation}
+import software.amazon.awscdk.services.route53.{HostedZone, HostedZoneAttributes}
+import software.amazon.awscdk.{Duration, Stage}
 import software.constructs.Construct
 
 import scala.jdk.CollectionConverters._
@@ -12,8 +15,24 @@ import scala.jdk.CollectionConverters._
  * Serverless API that the client interacts with.
  */
 class ClientApi(scope: Construct, id: String, server: AutoStoppingGameServer) extends Construct(scope, id) {
+  // Import existing HZ not defined in this CDK app
+  private val hostedZone = HostedZone.fromHostedZoneAttributes(this, "HostedZone", HostedZoneAttributes.builder
+    .zoneName(zoneName)
+    .hostedZoneId(hostedZoneId)
+    .build)
+  private val certificate = Certificate.Builder.create(this, "Certificate")
+    .domainName(domainName)
+    .validation(CertificateValidation.fromDns(hostedZone))
+    .build
+
   val api: HttpApi = HttpApi.Builder.create(this, "HttpApi")
     .description(Stage.of(this).getStageName)
+    .defaultDomainMapping(DomainMappingOptions.builder
+      .domainName(DomainName.Builder.create(this, "DomainName")
+        .domainName(domainName)
+        .certificate(certificate)
+        .build)
+      .build)
     .corsPreflight(CorsPreflightOptions.builder
       .allowHeaders(List("Authorization").asJava)
       .allowMethods(List(CorsHttpMethod.GET, CorsHttpMethod.HEAD, CorsHttpMethod.OPTIONS, CorsHttpMethod.POST).asJava)
@@ -31,4 +50,12 @@ class ClientApi(scope: Construct, id: String, server: AutoStoppingGameServer) ex
     .methods(List(HttpMethod.POST).asJava)
     .integration(new HttpLambdaIntegration("GetServerStatusIntegration", server.statusFunction))
     .build)
+
+  def endpoint: String = api.getApiEndpoint
+}
+
+object ClientApi {
+  private val zoneName = "ericjiang.me"
+  private val hostedZoneId = "Z06067853SHQF3QW16T9N"
+  private val domainName = s"api.valheim.$zoneName"
 }
