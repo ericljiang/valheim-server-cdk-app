@@ -5,7 +5,8 @@ import me.ericjiang.valheimservercdk.server.compute.AutoStoppingGameServer
 import software.amazon.awscdk.services.apigatewayv2.alpha._
 import software.amazon.awscdk.services.apigatewayv2.integrations.alpha.HttpLambdaIntegration
 import software.amazon.awscdk.services.certificatemanager.{Certificate, CertificateValidation}
-import software.amazon.awscdk.services.route53.{HostedZone, HostedZoneAttributes}
+import software.amazon.awscdk.services.route53.targets.ApiGatewayv2DomainProperties
+import software.amazon.awscdk.services.route53.{ARecord, HostedZone, HostedZoneAttributes, RecordTarget}
 import software.amazon.awscdk.{Duration, Stage}
 import software.constructs.Construct
 
@@ -24,14 +25,22 @@ class ClientApi(scope: Construct, id: String, server: AutoStoppingGameServer) ex
     .domainName(domainName)
     .validation(CertificateValidation.fromDns(hostedZone))
     .build
+  private val apiDomainName = DomainName.Builder.create(this, "DomainName")
+    .domainName(domainName)
+    .certificate(certificate)
+    .build
+  ARecord.Builder.create(this, "ARecord")
+    .zone(hostedZone)
+    .recordName(domainName)
+    .target(RecordTarget.fromAlias(new ApiGatewayv2DomainProperties(
+      apiDomainName.getRegionalDomainName,
+      apiDomainName.getRegionalHostedZoneId)))
+    .build
 
   val api: HttpApi = HttpApi.Builder.create(this, "HttpApi")
     .description(Stage.of(this).getStageName)
     .defaultDomainMapping(DomainMappingOptions.builder
-      .domainName(DomainName.Builder.create(this, "DomainName")
-        .domainName(domainName)
-        .certificate(certificate)
-        .build)
+      .domainName(apiDomainName)
       .build)
     .corsPreflight(CorsPreflightOptions.builder
       .allowHeaders(List("Authorization").asJava)
