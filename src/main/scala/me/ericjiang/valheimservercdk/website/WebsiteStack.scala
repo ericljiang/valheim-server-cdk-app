@@ -1,5 +1,7 @@
 package me.ericjiang.valheimservercdk.website
 
+import software.amazon.awscdk.services.cloudfront.origins.S3Origin
+import software.amazon.awscdk.services.cloudfront.{BehaviorOptions, Distribution}
 import software.amazon.awscdk.services.s3.Bucket
 import software.amazon.awscdk.services.s3.deployment.{BucketDeployment, Source}
 import software.amazon.awscdk.{RemovalPolicy, Stack, StackProps}
@@ -19,5 +21,11 @@ class WebsiteStack(scope: Construct, id: String, props: StackProps = null)
   BucketDeployment.Builder.create(this, "WebsiteDeployment")
     .destinationBucket(websiteBucket)
     .sources(Seq(Source.asset("src/main/resources/website")).asJava)
+    .build
+
+  Distribution.Builder.create(this, "CloudFrontDistribution")
+    .defaultBehavior(BehaviorOptions.builder
+      .origin(new S3Origin(websiteBucket))
+      .build)
     .build
 }
