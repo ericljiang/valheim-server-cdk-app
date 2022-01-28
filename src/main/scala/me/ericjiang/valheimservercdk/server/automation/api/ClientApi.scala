@@ -1,5 +1,6 @@
 package me.ericjiang.valheimservercdk.server.automation.api
 
+import me.ericjiang.valheimservercdk.StageConfig
 import me.ericjiang.valheimservercdk.server.automation.api.ClientApi._
 import me.ericjiang.valheimservercdk.server.compute.AutoStoppingGameServer
 import software.amazon.awscdk.services.apigatewayv2.alpha._
@@ -16,31 +17,35 @@ import scala.jdk.CollectionConverters._
  * Serverless API that the client interacts with.
  */
 class ClientApi(scope: Construct, id: String, server: AutoStoppingGameServer) extends Construct(scope, id) {
+
+  private val appDomain = StageConfig.find(this).appDomain
+  private val apiDomain = s"api.$appDomain"
+
   // Import existing HZ not defined in this CDK app
   private val hostedZone = HostedZone.fromHostedZoneAttributes(this, "HostedZone", HostedZoneAttributes.builder
     .zoneName(zoneName)
     .hostedZoneId(hostedZoneId)
     .build)
   private val certificate = Certificate.Builder.create(this, "Certificate")
-    .domainName(domainName)
+    .domainName(apiDomain)
     .validation(CertificateValidation.fromDns(hostedZone))
     .build
-  private val apiDomainName = DomainName.Builder.create(this, "DomainName")
-    .domainName(domainName)
+  private val customDomain = DomainName.Builder.create(this, "DomainName")
+    .domainName(apiDomain)
     .certificate(certificate)
     .build
   ARecord.Builder.create(this, "ARecord")
     .zone(hostedZone)
-    .recordName(domainName)
+    .recordName(apiDomain)
     .target(RecordTarget.fromAlias(new ApiGatewayv2DomainProperties(
-      apiDomainName.getRegionalDomainName,
-      apiDomainName.getRegionalHostedZoneId)))
+      customDomain.getRegionalDomainName,
+      customDomain.getRegionalHostedZoneId)))
     .build
 
   val api: HttpApi = HttpApi.Builder.create(this, "HttpApi")
-    .description(Stage.of(this).getStageName)
+    .description(StageConfig.find(this).stageName)
     .defaultDomainMapping(DomainMappingOptions.builder
-      .domainName(apiDomainName)
+      .domainName(customDomain)
       .build)
     .corsPreflight(CorsPreflightOptions.builder
       .allowHeaders(List("Authorization").asJava)
@@ -66,5 +71,4 @@ class ClientApi(scope: Construct, id: String, server: AutoStoppingGameServer) ex
 object ClientApi {
   private val zoneName = "ericjiang.me"
   private val hostedZoneId = "Z06067853SHQF3QW16T9N"
-  private val domainName = s"api.valheim.$zoneName"
 }

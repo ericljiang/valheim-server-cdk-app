@@ -1,18 +1,81 @@
 package me.ericjiang.valheimservercdk.server.compute
 
+import me.ericjiang.valheimservercdk.StageConfig
+import software.amazon.awscdk.Duration
 import software.amazon.awscdk.services.cloudwatch.Metric
 import software.amazon.awscdk.services.ec2._
 import software.amazon.awscdk.services.iam.{Effect, ManagedPolicy, PolicyStatement}
 import software.amazon.awscdk.services.s3.Bucket
-import software.amazon.awscdk.{Duration, Stack, Stage}
 import software.constructs.Construct
 
 import scala.jdk.CollectionConverters._
 
 class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, id) {
-  private val stage = Stage.of(this)
 
-  val backupBucket = new Bucket(this, "BackupBucket")
+  private val stageConfig: StageConfig = StageConfig.find(this)
+
+  private val backupBucket = new Bucket(this, "BackupBucket")
+
+  private val cloudFormationInit = CloudFormationInit.fromElements(
+    InitPackage.yum("amazon-cloudwatch-agent"),
+    InitPackage.yum("docker"),
+    InitPackage.yum("jq"),
+    InitPackage.yum("nmap-ncat"),
+    // Environment variables used inside Docker container
+    InitFile.fromString("/etc/sysconfig/valheim-server",
+      raw"""SERVER_NAME=Yeah
+           |SERVER_PORT=2456
+           |WORLD_NAME=yeahh
+           |SERVER_PASS=yeah1234
+           |SERVER_PUBLIC=true
+           |STATUS_HTTP=true
+           |BACKUPS_CRON=*/30 * * * *
+           |DISCORD_WEBHOOK=https://discord.com/api/webhooks/930203489722826813/9r6qTG5_n162Fb2u6yISOvDh9GZ2kVdXKvCWGYUMKHUjTuMfGXOTE58w2gwYYOnhuZGD
+           |POST_BOOTSTRAP_HOOK=apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install awscli
+           |POST_SERVER_LISTENING_HOOK=curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"Valheim server started\"}" "$$DISCORD_WEBHOOK"
+           |POST_BACKUP_HOOK=aws s3 cp @BACKUP_FILE@ s3://${backupBucket.getBucketName}/
+           |PRE_SERVER_SHUTDOWN_HOOK=supervisorctl signal HUP valheim-backup && sleep 60
+           |POST_SERVER_SHUTDOWN_HOOK=aws s3 cp @BACKUP_FILE@ s3://${backupBucket.getBucketName}/
+           |""".stripMargin),
+    // Environment variables used in systemd unit that runs the Docker container
+    InitFile.fromString("/etc/sysconfig/valheim-service",
+      s"""LOG_GROUP=${stageConfig.logGroup}
+         |""".stripMargin),
+    InitFile.fromFileInline("/etc/systemd/system/valheim.service", "src/main/resources/ec2/valheim.service"),
+    InitFile.fromFileInline(
+      "/usr/local/bin/put-player-count-metric.sh",
+      "src/main/resources/ec2/put-player-count-metric.sh",
+      InitFileOptions.builder.mode("000744").build),
+    InitFile.fromString("/etc/cron.d/put-player-count-metric",
+      """*/5 * * * * root /usr/local/bin/put-player-count-metric.sh
+        |""".stripMargin), // Newline required at end of file
+    InitFile.fromString("/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
+      raw"""{
+           |  "metrics": {
+           |    "namespace": "${stageConfig.metricNamespace}",
+           |    "append_dimensions": {
+           |      "InstanceId": "$${aws:InstanceId}",
+           |      "InstanceType": "$${aws:InstanceType}"
+           |    },
+           |    "aggregation_dimensions": [["InstanceId", "InstanceType"], ["InstanceId"]],
+           |    "metrics_collected": {
+           |      "cpu": {
+           |        "resources": ["*"],
+           |        "totalcpu": true,
+           |        "measurement": ["cpu_usage_active"]
+           |      },
+           |      "statsd": {}
+           |    }
+           |  }
+           |}
+           |""".stripMargin),
+    InitCommand.shellCommand(
+      """/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+        |systemctl daemon-reload
+        |systemctl enable valheim.service
+        |systemctl start valheim.service
+        |""".stripMargin)
+  )
 
   // create instance
   val instance: Instance = Instance.Builder.create(this, "Instance")
@@ -22,10 +85,7 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
       .cachedInContext(true)
       .build))
     .vpc(Vpc.fromLookup(this, "DefaultVpc", VpcLookupOptions.builder.isDefault(true).build))
-    .init(cloudFormationInit(
-      stageName = stage.getStageName,
-      backupBucketName = backupBucket.getBucketName,
-      region = Stack.of(this).getRegion))
+    .init(cloudFormationInit)
     // Recreate instance to apply changes. Use in development only!
     .initOptions(ApplyCloudFormationInitOptions.builder.embedFingerprint(true).build)
     .userDataCausesReplacement(true)
@@ -50,72 +110,10 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
   instance.getRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName("CloudWatchAgentServerPolicy"))
 
   val playerCountMetric: Metric = Metric.Builder.create
-    .namespace(stage.getStageName)
+    .namespace(stageConfig.metricNamespace)
     .metricName("PlayerCount")
     .dimensionsMap(Map("InstanceId" -> instance.getInstanceId).asJava)
     .period(Duration.minutes(5))
     .statistic("max")
     .build
-
-  private def cloudFormationInit(stageName: String, backupBucketName: String, region: String): CloudFormationInit =
-    CloudFormationInit.fromElements(
-      InitPackage.yum("amazon-cloudwatch-agent"),
-      InitPackage.yum("docker"),
-      InitPackage.yum("jq"),
-      InitPackage.yum("nmap-ncat"),
-      // Environment variables used inside Docker container
-      InitFile.fromString("/etc/sysconfig/valheim-server",
-        raw"""SERVER_NAME=Yeah
-             |SERVER_PORT=2456
-             |WORLD_NAME=yeahh
-             |SERVER_PASS=yeah1234
-             |SERVER_PUBLIC=true
-             |STATUS_HTTP=true
-             |BACKUPS_CRON=*/30 * * * *
-             |DISCORD_WEBHOOK=https://discord.com/api/webhooks/930203489722826813/9r6qTG5_n162Fb2u6yISOvDh9GZ2kVdXKvCWGYUMKHUjTuMfGXOTE58w2gwYYOnhuZGD
-             |POST_BOOTSTRAP_HOOK=apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y install awscli
-             |POST_SERVER_LISTENING_HOOK=curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"Valheim server started\"}" "$$DISCORD_WEBHOOK"
-             |POST_BACKUP_HOOK=aws s3 cp @BACKUP_FILE@ s3://$backupBucketName/
-             |PRE_SERVER_SHUTDOWN_HOOK=supervisorctl signal HUP valheim-backup && sleep 60
-             |POST_SERVER_SHUTDOWN_HOOK=aws s3 cp @BACKUP_FILE@ s3://$backupBucketName/
-             |""".stripMargin),
-      // Environment variables used in systemd unit that runs the Docker container
-      InitFile.fromString("/etc/sysconfig/valheim-service",
-        s"""STAGE_NAME=$stageName
-           |""".stripMargin),
-      InitFile.fromFileInline("/etc/systemd/system/valheim.service", "src/main/resources/ec2/valheim.service"),
-      InitFile.fromFileInline(
-        "/usr/local/bin/put-player-count-metric.sh",
-        "src/main/resources/ec2/put-player-count-metric.sh",
-        InitFileOptions.builder.mode("000744").build),
-      InitFile.fromString("/etc/cron.d/put-player-count-metric",
-        """*/5 * * * * root /usr/local/bin/put-player-count-metric.sh
-          |""".stripMargin), // Newline required at end of file
-      InitFile.fromString("/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
-        raw"""{
-             |  "metrics": {
-             |    "namespace": "$stageName",
-             |    "append_dimensions": {
-             |      "InstanceId": "$${aws:InstanceId}",
-             |      "InstanceType": "$${aws:InstanceType}"
-             |    },
-             |    "aggregation_dimensions": [["InstanceId", "InstanceType"], ["InstanceId"]],
-             |    "metrics_collected": {
-             |      "cpu": {
-             |        "resources": ["*"],
-             |        "totalcpu": true,
-             |        "measurement": ["cpu_usage_active"]
-             |      },
-             |      "statsd": {}
-             |    }
-             |  }
-             |}
-             |""".stripMargin),
-      InitCommand.shellCommand(
-        """/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-          |systemctl daemon-reload
-          |systemctl enable valheim.service
-          |systemctl start valheim.service
-          |""".stripMargin)
-    )
 }
