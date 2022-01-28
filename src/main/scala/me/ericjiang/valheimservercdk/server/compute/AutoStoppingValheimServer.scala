@@ -1,7 +1,6 @@
 package me.ericjiang.valheimservercdk.server.compute
 
 import software.amazon.awscdk.services.cloudwatch.actions.{Ec2Action, Ec2InstanceAction}
-import software.amazon.awscdk.services.ec2.Port
 import software.amazon.awscdk.services.lambda
 import software.constructs.Construct
 
