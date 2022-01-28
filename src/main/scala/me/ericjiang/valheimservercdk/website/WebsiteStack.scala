@@ -27,7 +27,7 @@ class WebsiteStack(scope: Construct, id: String, props: StackProps = null)
 
   BucketDeployment.Builder.create(this, "WebsiteDeployment")
     .destinationBucket(websiteBucket)
-    .sources(Seq(Source.asset("src/main/resources/website")).asJava)
+    .sources(Seq(Source.asset("../valheim-website-build")).asJava)
     .build
 
   // TODO eliminate code duplication with ClientApi

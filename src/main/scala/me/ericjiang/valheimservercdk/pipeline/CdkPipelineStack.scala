@@ -30,7 +30,7 @@ class CdkPipelineStack(scope: Construct, id: String, props: StackProps = null) e
     .synth(ShellStep.Builder.create("Synth")
       .input(gitHubSource("valheim-server-cdk-app"))
       .additionalInputs(Map(
-        "../valheim-website" -> websiteBuild
+        "../valheim-website-build" -> websiteBuild
       ).asJava)
       .commands(Seq(
         "npm install -g aws-cdk",
