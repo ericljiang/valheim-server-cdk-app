@@ -3,7 +3,7 @@ package me.ericjiang.valheimservercdk.website
 import me.ericjiang.valheimservercdk.StageConfig
 import software.amazon.awscdk.services.certificatemanager.DnsValidatedCertificate
 import software.amazon.awscdk.services.cloudfront.origins.S3Origin
-import software.amazon.awscdk.services.cloudfront.{BehaviorOptions, Distribution}
+import software.amazon.awscdk.services.cloudfront.{BehaviorOptions, Distribution, ViewerProtocolPolicy}
 import software.amazon.awscdk.services.route53.targets.CloudFrontTarget
 import software.amazon.awscdk.services.route53.{ARecord, HostedZone, HostedZoneAttributes, RecordTarget}
 import software.amazon.awscdk.services.s3.Bucket
@@ -45,6 +45,7 @@ class WebsiteStack(scope: Construct, id: String, props: StackProps = null)
   private val distribution = Distribution.Builder.create(this, "CloudFrontDistribution")
     .defaultBehavior(BehaviorOptions.builder
       .origin(new S3Origin(websiteBucket))
+      .viewerProtocolPolicy(ViewerProtocolPolicy.REDIRECT_TO_HTTPS)
       .build)
     .domainNames(Seq(stageConfig.appDomain).asJava)
     .certificate(certificate)
