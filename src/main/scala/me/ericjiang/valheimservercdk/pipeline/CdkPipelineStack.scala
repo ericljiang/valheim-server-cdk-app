@@ -22,7 +22,10 @@ class CdkPipelineStack(scope: Construct, id: String, props: StackProps = null) e
   private val websiteBuild = ShellStep.Builder.create("WebsiteBuild")
     .input(gitHubSource("valheim-website"))
     .primaryOutputDirectory("./build")
-    .commands(Seq("npm run build").asJava)
+    .commands(Seq(
+      "npm install",
+      "npm run build"
+    ).asJava)
     .build
 
   // https://docs.aws.amazon.com/cdk/v2/guide/cdk_pipeline.html
