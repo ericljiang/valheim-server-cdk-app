@@ -19,17 +19,32 @@ class CdkPipelineStack(scope: Construct, id: String, props: StackProps = null) e
     .providerType("GitHub")
     .build
 
+  private val websiteBuild = ShellStep.Builder.create("WebsiteBuild")
+    .input(gitHubSource("valheim-website"))
+    .primaryOutputDirectory("./build")
+    .commands(Seq("npm run build").asJava)
+    .build
+
   // https://docs.aws.amazon.com/cdk/v2/guide/cdk_pipeline.html
   private val pipeline = CodePipeline.Builder.create(this, "pipeline")
     .synth(ShellStep.Builder.create("Synth")
-      .input(CodePipelineSource.connection("ericljiang/valheim-server-cdk-app", "main", ConnectionSourceOptions.builder
-        .connectionArn(codeStarConnection.getAttrConnectionArn)
-        .build))
-      .commands(Seq("npm install -g aws-cdk", "cdk synth").asJava)
+      .input(gitHubSource("valheim-server-cdk-app"))
+      .additionalInputs(Map(
+        "../valheim-website" -> websiteBuild
+      ).asJava)
+      .commands(Seq(
+        "npm install -g aws-cdk",
+        "cdk synth"
+      ).asJava)
       .build)
     .build
 
   private val beta = pipeline.addStage(new ServerStage(this, StageConfig.Beta))
   private val prod = pipeline.addStage(new ServerStage(this, StageConfig.Prod))
   prod.addPre(new ManualApprovalStep("PromoteToProd"))
+
+  def gitHubSource(repository: String, branch: String = "main"): CodePipelineSource =
+    CodePipelineSource.connection(s"ericljiang/$repository", branch, ConnectionSourceOptions.builder
+      .connectionArn(codeStarConnection.getAttrConnectionArn)
+      .build)
 }
