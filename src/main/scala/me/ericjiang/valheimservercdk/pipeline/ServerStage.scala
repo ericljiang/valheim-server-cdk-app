@@ -10,5 +10,4 @@ class ServerStage(scope: Construct, stageConfig: StageConfig)
   extends Stage(scope, stageConfig.stageName, StageProps.builder.env(stageConfig.environment).build) {
   val serverStack = new AutomatedServerStack(this, "ServerStack", idleDuration = stageConfig.idleDuration)
   val websiteStack = new WebsiteStack(this, "WebsiteStack")
-  websiteStack.addDependency(serverStack)
 }
