@@ -4,7 +4,8 @@ import me.ericjiang.valheimservercdk.StageConfig
 import software.amazon.awscdk.services.certificatemanager.DnsValidatedCertificate
 import software.amazon.awscdk.services.cloudfront.origins.S3Origin
 import software.amazon.awscdk.services.cloudfront.{BehaviorOptions, Distribution}
-import software.amazon.awscdk.services.route53.{HostedZone, HostedZoneAttributes}
+import software.amazon.awscdk.services.route53.targets.CloudFrontTarget
+import software.amazon.awscdk.services.route53.{ARecord, HostedZone, HostedZoneAttributes, RecordTarget}
 import software.amazon.awscdk.services.s3.Bucket
 import software.amazon.awscdk.services.s3.deployment.{BucketDeployment, Source}
 import software.amazon.awscdk.{RemovalPolicy, Stack, StackProps}
@@ -41,11 +42,17 @@ class WebsiteStack(scope: Construct, id: String, props: StackProps = null)
     .region("us-east-1")
     .build
 
-  Distribution.Builder.create(this, "CloudFrontDistribution")
+  private val distribution = Distribution.Builder.create(this, "CloudFrontDistribution")
     .defaultBehavior(BehaviorOptions.builder
       .origin(new S3Origin(websiteBucket))
       .build)
     .domainNames(Seq(stageConfig.appDomain).asJava)
     .certificate(certificate)
+    .build
+
+  ARecord.Builder.create(this, "ARecord")
+    .zone(hostedZone)
+    .recordName(stageConfig.appDomain)
+    .target(RecordTarget.fromAlias(new CloudFrontTarget(distribution)))
     .build
 }
