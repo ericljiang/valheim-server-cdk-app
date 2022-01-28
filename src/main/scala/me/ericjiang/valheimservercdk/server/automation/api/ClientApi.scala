@@ -3,12 +3,12 @@ package me.ericjiang.valheimservercdk.server.automation.api
 import me.ericjiang.valheimservercdk.StageConfig
 import me.ericjiang.valheimservercdk.server.automation.api.ClientApi._
 import me.ericjiang.valheimservercdk.server.compute.AutoStoppingGameServer
+import software.amazon.awscdk.Duration
 import software.amazon.awscdk.services.apigatewayv2.alpha._
 import software.amazon.awscdk.services.apigatewayv2.integrations.alpha.HttpLambdaIntegration
 import software.amazon.awscdk.services.certificatemanager.{Certificate, CertificateValidation}
 import software.amazon.awscdk.services.route53.targets.ApiGatewayv2DomainProperties
 import software.amazon.awscdk.services.route53.{ARecord, HostedZone, HostedZoneAttributes, RecordTarget}
-import software.amazon.awscdk.{Duration, Stage}
 import software.constructs.Construct
 
 import scala.jdk.CollectionConverters._
@@ -64,8 +64,6 @@ class ClientApi(scope: Construct, id: String, server: AutoStoppingGameServer) ex
     .methods(List(HttpMethod.POST).asJava)
     .integration(new HttpLambdaIntegration("GetServerStatusIntegration", server.statusFunction))
     .build)
-
-  def endpoint: String = api.getApiEndpoint
 }
 
 object ClientApi {

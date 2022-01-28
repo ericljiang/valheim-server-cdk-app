@@ -11,6 +11,4 @@ class AutomatedServerStack(scope: Construct, id: String, props: StackProps = nul
   extends Stack(scope, id, props) {
   val server: AutoStoppingGameServer = new AutoStoppingValheimServer(this, "Server", idleDuration)
   val api = new ClientApi(this, "api", server)
-
-  def apiEndpoint: String = api.endpoint
 }
