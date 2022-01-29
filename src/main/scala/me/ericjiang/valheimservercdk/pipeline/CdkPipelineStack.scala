@@ -23,7 +23,7 @@ class CdkPipelineStack(scope: Construct, id: String, props: StackProps = null) e
     .input(gitHubSource("valheim-website"))
     .primaryOutputDirectory("./build")
     .commands(Seq(
-      "npm install",
+      "npm ci",
       "npm run build"
     ).asJava)
     .build
@@ -33,7 +33,7 @@ class CdkPipelineStack(scope: Construct, id: String, props: StackProps = null) e
     .synth(ShellStep.Builder.create("Synth")
       .input(gitHubSource("valheim-server-cdk-app"))
       .additionalInputs(Map(
-        "../valheim-website-build" -> websiteBuild
+        "../valheim-website" -> websiteBuild
       ).asJava)
       .commands(Seq(
         "npm install -g aws-cdk",
