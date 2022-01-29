@@ -25,11 +25,6 @@ class WebsiteStack(scope: Construct, id: String, props: StackProps = null)
     .autoDeleteObjects(true)
     .build
 
-  BucketDeployment.Builder.create(this, "WebsiteDeployment")
-    .destinationBucket(websiteBucket)
-    .sources(Seq(Source.asset("../valheim-website")).asJava)
-    .build
-
   // TODO eliminate code duplication with ClientApi
   private val hostedZone = HostedZone.fromHostedZoneAttributes(this, "HostedZone", HostedZoneAttributes.builder
     .zoneName("ericjiang.me")
@@ -49,6 +44,12 @@ class WebsiteStack(scope: Construct, id: String, props: StackProps = null)
       .build)
     .domainNames(Seq(stageConfig.appDomain).asJava)
     .certificate(certificate)
+    .build
+
+  BucketDeployment.Builder.create(this, "WebsiteDeployment")
+    .destinationBucket(websiteBucket)
+    .sources(Seq(Source.asset("../valheim-website")).asJava)
+    .distribution(distribution)
     .build
 
   ARecord.Builder.create(this, "ARecord")
