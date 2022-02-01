@@ -17,7 +17,7 @@ class RouteDnsToEc2Function(scope: Construct, id: String, instance: Instance, ho
     .code(Code.fromAsset("src/main/resources/lambda/dns"))
     .environment(Map(
       "INSTANCE_ID" -> instance.getInstanceId,
-      "RECORD_NAME" -> StageConfig.find(this).appDomain,
+      "RECORD_NAME" -> StageConfig.find(this).gameServerDomain,
       "HOSTED_ZONE_ID" -> hostedZone.getHostedZoneId
     ).asJava)
     .build
