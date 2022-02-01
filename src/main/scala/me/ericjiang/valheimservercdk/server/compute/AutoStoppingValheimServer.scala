@@ -1,11 +1,16 @@
 package me.ericjiang.valheimservercdk.server.compute
 
+import me.ericjiang.valheimservercdk.util.CdkUtils.InstanceExtensions
+import software.amazon.awscdk.services.cloudtrail.Trail
 import software.amazon.awscdk.services.cloudwatch.actions.{Ec2Action, Ec2InstanceAction}
+import software.amazon.awscdk.services.events.{EventPattern, OnEventOptions}
+import software.amazon.awscdk.services.events.targets.LambdaFunction
 import software.amazon.awscdk.services.lambda
 import software.amazon.awscdk.services.route53.IHostedZone
 import software.constructs.Construct
 
 import scala.concurrent.duration.Duration
+import scala.jdk.CollectionConverters._
 
 class AutoStoppingValheimServer(scope: Construct, id: String, idleDuration: Duration, hostedZone: IHostedZone)
   extends Construct(scope, id) with AutoStoppingGameServer {
@@ -26,4 +31,17 @@ class AutoStoppingValheimServer(scope: Construct, id: String, idleDuration: Dura
   private val routeDnsFunction = new RouteDnsToEc2Function(this, "RouteDnsFunction",
     instance = valheimInstance.instance,
     hostedZone = hostedZone)
+
+  Trail.onEvent(this, "RouteDnsRule", OnEventOptions.builder
+    .eventPattern(EventPattern.builder
+      .detailType(Seq("EC2 Instance State-change Notification").asJava)
+      .source(Seq("aws.ec2").asJava)
+      .resources(Seq(valheimInstance.instance.getArn).asJava)
+      .detail(Map(
+        "instance-id" -> valheimInstance.instance.getInstanceId,
+        "state" -> "running"
+      ).asJava)
+      .build)
+    .target(new LambdaFunction(routeDnsFunction.function))
+    .build)
 }
