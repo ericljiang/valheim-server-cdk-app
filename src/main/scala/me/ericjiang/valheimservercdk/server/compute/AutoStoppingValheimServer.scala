@@ -34,12 +34,12 @@ class AutoStoppingValheimServer(scope: Construct, id: String, idleDuration: Dura
 
   Trail.onEvent(this, "RouteDnsRule", OnEventOptions.builder
     .eventPattern(EventPattern.builder
-      .detailType(Seq("EC2 Instance State-change Notification").asJava)
       .source(Seq("aws.ec2").asJava)
+      .detailType(Seq("EC2 Instance State-change Notification").asJava)
       .resources(Seq(valheimInstance.instance.getArn).asJava)
       .detail(Map(
-        "instance-id" -> valheimInstance.instance.getInstanceId,
-        "state" -> "running"
+        "instance-id" -> Seq(valheimInstance.instance.getInstanceId),
+        "state" -> Seq("running")
       ).asJava)
       .build)
     .target(new LambdaFunction(routeDnsFunction.function))
