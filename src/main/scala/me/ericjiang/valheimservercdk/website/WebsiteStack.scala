@@ -5,7 +5,7 @@ import software.amazon.awscdk.services.certificatemanager.DnsValidatedCertificat
 import software.amazon.awscdk.services.cloudfront.origins.S3Origin
 import software.amazon.awscdk.services.cloudfront.{BehaviorOptions, Distribution, ViewerProtocolPolicy}
 import software.amazon.awscdk.services.route53.targets.CloudFrontTarget
-import software.amazon.awscdk.services.route53.{ARecord, HostedZone, HostedZoneAttributes, RecordTarget}
+import software.amazon.awscdk.services.route53.{ARecord, IHostedZone, RecordTarget}
 import software.amazon.awscdk.services.s3.Bucket
 import software.amazon.awscdk.services.s3.deployment.{BucketDeployment, Source}
 import software.amazon.awscdk.{RemovalPolicy, Stack, StackProps}
@@ -13,7 +13,7 @@ import software.constructs.Construct
 
 import scala.jdk.CollectionConverters._
 
-class WebsiteStack(scope: Construct, id: String, props: StackProps = null)
+class WebsiteStack(scope: Construct, id: String, props: StackProps = null, hostedZone: IHostedZone)
   extends Stack(scope, id, props) {
 
   private val stageConfig: StageConfig = StageConfig.find(this)
@@ -24,12 +24,6 @@ class WebsiteStack(scope: Construct, id: String, props: StackProps = null)
     .removalPolicy(RemovalPolicy.DESTROY)
     .autoDeleteObjects(true)
     .build
-
-  // TODO eliminate code duplication with ClientApi
-  private val hostedZone = HostedZone.fromHostedZoneAttributes(this, "HostedZone", HostedZoneAttributes.builder
-    .zoneName("ericjiang.me")
-    .hostedZoneId("Z06067853SHQF3QW16T9N")
-    .build)
 
   private val certificate = DnsValidatedCertificate.Builder.create(this, "Certificate")
     .domainName(stageConfig.appDomain)
