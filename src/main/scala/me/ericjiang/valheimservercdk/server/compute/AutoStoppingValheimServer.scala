@@ -38,8 +38,8 @@ class AutoStoppingValheimServer(scope: Construct, id: String, idleDuration: Dura
       .detailType(Seq("EC2 Instance State-change Notification").asJava)
       .resources(Seq(valheimInstance.instance.getArn).asJava)
       .detail(Map(
-        "instance-id" -> Seq(valheimInstance.instance.getInstanceId),
-        "state" -> Seq("running")
+        "instance-id" -> Seq(valheimInstance.instance.getInstanceId).asJava,
+        "state" -> Seq("running").asJava
       ).asJava)
       .build)
     .target(new LambdaFunction(routeDnsFunction.function))
