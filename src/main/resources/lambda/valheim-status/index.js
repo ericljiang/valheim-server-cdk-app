@@ -3,6 +3,24 @@ const http = require('http');
 const ec2 = new EC2();
 const params = { InstanceIds: [process.env.INSTANCE_ID] };
 
+function getGameStatus(ipAddress) {
+    return new Promise((resolve, reject) => {
+        try {
+            const options = { timeout: 2000 };
+            http.get(`http://${ipAddress}/status.json`, options, (response) => {
+                if (response.statusCode !== 200) {
+                    resolve(new Error('statusCode=' + response.statusCode));
+                }
+                let str = '';
+                response.on('data', (chunk) => str += chunk);
+                response.on('end', () => resolve(JSON.parse(str)));
+            }).on('error', resolve).end();
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
 exports.handler = async (event) => {
     try {
         const instanceDescriptions = await ec2.describeInstances(params).promise();
@@ -23,12 +41,7 @@ exports.handler = async (event) => {
             };
         }
 
-        let serverStatus;
-        http.get(`http://${instanceStatus.publicIpAddress}/status.json`, (response) => {
-            let str = '';
-            response.on('data', (chunk) => str += chunk);
-            response.on('end', () => serverStatus = JSON.parse(str));
-        });
+        const serverStatus = await getGameStatus(instanceStatus.publicIpAddress);
 
         return {
             statusCode: 200,
