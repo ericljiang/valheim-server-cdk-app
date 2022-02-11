@@ -1,9 +1,10 @@
 package me.ericjiang.valheimservercdk.server.compute
 
+import software.amazon.awscdk.services.events.EventPattern
 import software.amazon.awscdk.services.lambda.Function
 
 /**
- * A game server that can be started and stopped by automation infrastructure.
+ * A game server that can be started on demand and stops automatically.
  */
 trait AutoStoppingGameServer {
   /**
@@ -17,4 +18,8 @@ trait AutoStoppingGameServer {
    * At a minimum, status must include the information required for clients to connect to the server.
    */
   def statusFunction: Function
+
+  def getIpAddress: Function
+
+  def startEventPattern: EventPattern
 }

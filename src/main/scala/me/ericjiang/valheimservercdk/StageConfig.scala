@@ -10,6 +10,7 @@ trait StageConfig {
   def stageName: String
   def appDomain: String
   def gameServerDomain: String
+  def apiPath: String
   def idleDuration: Duration
   def logGroup: String = stageName
   def metricNamespace: String = stageName
@@ -21,6 +22,7 @@ object StageConfig {
     override def stageName: String = "ValheimServerBeta"
     override def appDomain: String = "valheim-beta.ericjiang.me"
     override def gameServerDomain: String = "vh-beta.ericjiang.me"
+    override def apiPath: String = "api"
     override def idleDuration: Duration = 10.minutes
   }
 
@@ -29,6 +31,7 @@ object StageConfig {
     override def stageName: String = "ValheimServerProd"
     override def appDomain: String = "valheim.ericjiang.me"
     override def gameServerDomain: String = "vh.ericjiang.me"
+    override def apiPath: String = "api"
     override def idleDuration: Duration = 1.hour
   }
 
