@@ -1,8 +1,8 @@
-package me.ericjiang.valheimservercdk.server.automation.api
+package me.ericjiang.valheimservercdk.server.api
 
 import me.ericjiang.valheimservercdk.StageConfig
 import me.ericjiang.valheimservercdk.server.compute.AutoStoppingGameServer
-import software.amazon.awscdk.Duration
+import software.amazon.awscdk.{Duration, Stack}
 import software.amazon.awscdk.services.apigatewayv2.alpha._
 import software.amazon.awscdk.services.apigatewayv2.integrations.alpha.HttpLambdaIntegration
 import software.constructs.Construct
@@ -36,11 +36,12 @@ class ClientApi(scope: Construct, id: String, server: AutoStoppingGameServer) ex
     .integration(new HttpLambdaIntegration("GetServerStatusIntegration", server.statusFunction))
     .build)
 
-  private val stage: HttpStage = HttpStage.Builder.create(this, "Stage")
+  HttpStage.Builder.create(this, "Stage")
     .httpApi(api)
     .stageName(stageConfig.apiPath)
     .autoDeploy(true)
     .build
 
-  def getUrl: String = stage.getUrl
+  def getDomain: String =
+    s"${api.getHttpApiId}.execute-api.${Stack.of(this).getRegion}.${Stack.of(this).getUrlSuffix}"
 }

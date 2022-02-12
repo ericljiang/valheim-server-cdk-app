@@ -1,7 +1,6 @@
 package me.ericjiang.valheimservercdk.network
 
 import me.ericjiang.valheimservercdk.StageConfig
-import me.ericjiang.valheimservercdk.server.automation.api.ClientApi
 import software.amazon.awscdk.services.certificatemanager.{DnsValidatedCertificate, ICertificate}
 import software.amazon.awscdk.services.cloudfront.origins.{HttpOrigin, S3Origin}
 import software.amazon.awscdk.services.cloudfront.{BehaviorOptions, CachePolicy, Distribution, ViewerProtocolPolicy}
@@ -13,7 +12,7 @@ import software.constructs.Construct
 
 import scala.jdk.CollectionConverters._
 
-class NetworkStack(scope: Construct, id: String, props: StackProps = null, websiteBucket: IBucket, api: ClientApi)
+class NetworkStack(scope: Construct, id: String, props: StackProps = null, websiteBucket: IBucket, apiDomain: String)
   extends Stack(scope, id, props) {
 
   private val stageConfig: StageConfig = StageConfig.find(this)
@@ -37,7 +36,7 @@ class NetworkStack(scope: Construct, id: String, props: StackProps = null, websi
       .build)
     .additionalBehaviors(Map(
       s"/${stageConfig.apiPath}/*" -> BehaviorOptions.builder
-        .origin(new HttpOrigin(api.getUrl))
+        .origin(new HttpOrigin(apiDomain))
         .cachePolicy(CachePolicy.CACHING_DISABLED)
         .build
     ).asJava)

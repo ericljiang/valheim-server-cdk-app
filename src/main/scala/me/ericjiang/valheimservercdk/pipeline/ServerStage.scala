@@ -12,5 +12,5 @@ class ServerStage(scope: Construct, stageConfig: StageConfig)
   val serverStack = new AutomatedServerStack(this, "ServerStack",
     idleDuration = stageConfig.idleDuration)
   val websiteStack = new WebsiteStack(this, "WebsiteStack")
-  val networkStack = new NetworkStack(this, "NetworkStack", websiteBucket = websiteStack.bucket, api = serverStack.api)
+  val networkStack = new NetworkStack(this, "NetworkStack", websiteBucket = websiteStack.bucket, apiDomain = serverStack.apiDomain)
 }

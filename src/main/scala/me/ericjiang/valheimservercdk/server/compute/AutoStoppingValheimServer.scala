@@ -27,7 +27,7 @@ class AutoStoppingValheimServer(scope: Construct, id: String, idleDuration: Dura
 
   override def getIpAddress: lambda.Function = ???
 
-  override def startEventPattern: EventPattern = EventPattern.builder
+  override val startEventPattern: EventPattern = EventPattern.builder
     .source(Seq("aws.ec2").asJava)
     .detailType(Seq("EC2 Instance State-change Notification").asJava)
     .resources(Seq(valheimInstance.instance.getArn).asJava)
