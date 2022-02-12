@@ -3,7 +3,7 @@ package me.ericjiang.valheimservercdk.network
 import me.ericjiang.valheimservercdk.StageConfig
 import software.amazon.awscdk.services.certificatemanager.{DnsValidatedCertificate, ICertificate}
 import software.amazon.awscdk.services.cloudfront.origins.{HttpOrigin, S3Origin}
-import software.amazon.awscdk.services.cloudfront.{BehaviorOptions, CachePolicy, Distribution, ViewerProtocolPolicy}
+import software.amazon.awscdk.services.cloudfront.{AllowedMethods, BehaviorOptions, CachePolicy, Distribution, ViewerProtocolPolicy}
 import software.amazon.awscdk.services.route53._
 import software.amazon.awscdk.services.route53.targets.CloudFrontTarget
 import software.amazon.awscdk.services.s3.IBucket
@@ -38,6 +38,7 @@ class NetworkStack(scope: Construct, id: String, props: StackProps = null, websi
       s"/${stageConfig.apiPath}/*" -> BehaviorOptions.builder
         .origin(new HttpOrigin(apiDomain))
         .cachePolicy(CachePolicy.CACHING_DISABLED)
+        .allowedMethods(AllowedMethods.ALLOW_ALL)
         .build
     ).asJava)
     .domainNames(Seq(stageConfig.appDomain).asJava)
