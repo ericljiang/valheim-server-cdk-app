@@ -12,7 +12,7 @@ class AutomaticShutdown(scope: Construct, id: String, autoStoppingGameServer: Au
   private val recentlyStartedAlarm = Alarm.Builder.create(this, "RecentlyStarted")
     .alarmDescription("Ensures that the idle alarm will enter OK state for at least one period after server starts.")
     .metric(autoStoppingGameServer.uptimeMetric)
-    .comparisonOperator(ComparisonOperator.GREATER_THAN_THRESHOLD)
+    .comparisonOperator(ComparisonOperator.LESS_THAN_OR_EQUAL_TO_THRESHOLD)
     .threshold(300)
     .evaluationPeriods(1)
     .build
