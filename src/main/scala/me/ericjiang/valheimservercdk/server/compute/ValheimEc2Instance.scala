@@ -46,8 +46,13 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
       "/usr/local/bin/put-player-count-metric.sh",
       "src/main/resources/ec2/put-player-count-metric.sh",
       InitFileOptions.builder.mode("000744").build),
-    InitFile.fromString("/etc/cron.d/put-player-count-metric",
+    InitFile.fromFileInline(
+      "/usr/local/bin/put-uptime-metric.sh",
+      "src/main/resources/ec2/put-uptime-metric.sh",
+      InitFileOptions.builder.mode("000744").build),
+    InitFile.fromString("/etc/cron.d/metrics",
       """*/5 * * * * root /usr/local/bin/put-player-count-metric.sh
+        |*/5 * * * * root /usr/local/bin/put-uptime-metric.sh
         |""".stripMargin), // Newline required at end of file
     InitFile.fromString("/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json",
       raw"""{
@@ -112,6 +117,14 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
   val playerCountMetric: Metric = Metric.Builder.create
     .namespace(stageConfig.metricNamespace)
     .metricName("PlayerCount")
+    .dimensionsMap(Map("InstanceId" -> instance.getInstanceId).asJava)
+    .period(Duration.minutes(5))
+    .statistic("max")
+    .build
+
+  val uptimeMetric: Metric = Metric.Builder.create
+    .namespace(stageConfig.metricNamespace)
+    .metricName("Uptime")
     .dimensionsMap(Map("InstanceId" -> instance.getInstanceId).asJava)
     .period(Duration.minutes(5))
     .statistic("max")

@@ -1,6 +1,7 @@
 package me.ericjiang.valheimservercdk.server.compute
 
 import me.ericjiang.valheimservercdk.util.CdkUtils.InstanceExtensions
+import software.amazon.awscdk.services.cloudwatch.{Alarm, AlarmRule, ComparisonOperator, CompositeAlarm}
 import software.amazon.awscdk.services.cloudwatch.actions.{Ec2Action, Ec2InstanceAction}
 import software.amazon.awscdk.services.events.EventPattern
 import software.amazon.awscdk.services.lambda
@@ -14,10 +15,25 @@ class AutoStoppingValheimServer(scope: Construct, id: String, idleDuration: Dura
 
   private val valheimInstance = new ValheimEc2Instance(this, "Instance")
 
+  private val recentlyStartedAlarm = Alarm.Builder.create(this, "RecentlyStarted")
+    .alarmDescription("Ensures that the idle alarm will enter OK state for at least one period after server starts.")
+    .metric(valheimInstance.uptimeMetric)
+    .comparisonOperator(ComparisonOperator.GREATER_THAN_THRESHOLD)
+    .threshold(300)
+    .evaluationPeriods(1)
+    .build
+
   private val idleAlarm = new PlayerCountBasedIdleAlarm(this, "IdleAlarm",
     playerCountMetric = valheimInstance.playerCountMetric,
     idleDuration = idleDuration)
-  idleAlarm.alarm.addAlarmAction(new Ec2Action(Ec2InstanceAction.STOP))
+
+  CompositeAlarm.Builder.create(this, "AutoShutdown")
+    .alarmRule(AlarmRule.allOf(
+      AlarmRule.not(recentlyStartedAlarm),
+      idleAlarm.alarm
+    ))
+    .build
+    .addAlarmAction(new Ec2Action(Ec2InstanceAction.STOP))
 
   override val startFunction: lambda.Function =
     new StartEc2InstanceFunction(this, "StartFunction", valheimInstance.instance).function
