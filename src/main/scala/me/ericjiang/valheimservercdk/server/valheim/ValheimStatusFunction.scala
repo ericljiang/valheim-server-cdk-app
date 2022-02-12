@@ -1,4 +1,4 @@
-package me.ericjiang.valheimservercdk.server.compute
+package me.ericjiang.valheimservercdk.server.valheim
 
 import software.amazon.awscdk.services.ec2.Instance
 import software.amazon.awscdk.services.iam.{Effect, PolicyStatement}

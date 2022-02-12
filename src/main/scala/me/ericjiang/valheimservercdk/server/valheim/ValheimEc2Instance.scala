@@ -1,4 +1,4 @@
-package me.ericjiang.valheimservercdk.server.compute
+package me.ericjiang.valheimservercdk.server.valheim
 
 import me.ericjiang.valheimservercdk.StageConfig
 import software.amazon.awscdk.Duration

@@ -1,7 +1,7 @@
 package me.ericjiang.valheimservercdk.server.api
 
 import me.ericjiang.valheimservercdk.StageConfig
-import me.ericjiang.valheimservercdk.server.compute.AutoStoppingGameServer
+import me.ericjiang.valheimservercdk.server.compute.AutomatableGameServer
 import software.amazon.awscdk.{Duration, Stack}
 import software.amazon.awscdk.services.apigatewayv2.alpha._
 import software.amazon.awscdk.services.apigatewayv2.integrations.alpha.HttpLambdaIntegration
@@ -12,7 +12,7 @@ import scala.jdk.CollectionConverters._
 /**
  * Serverless API that the client interacts with.
  */
-class ClientApi(scope: Construct, id: String, server: AutoStoppingGameServer) extends Construct(scope, id) {
+class ClientApi(scope: Construct, id: String, server: AutomatableGameServer) extends Construct(scope, id) {
   private val stageConfig: StageConfig = StageConfig.find(this)
 
   private val api: HttpApi = HttpApi.Builder.create(this, "HttpApi")
