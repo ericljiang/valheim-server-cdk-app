@@ -1,8 +1,21 @@
-const AWS = require('aws-sdk');
-const route53 = new AWS.Route53();
+const Lambda = require('aws-sdk/clients/lambda');
+const Route53 = require('aws-sdk/clients/route53');
 
-exports.handler = async (event) => {
-    const address = ""; // TODO
+const lambda = new Lambda();
+const route53 = new Route53();
+
+async function getIpAddress() {
+    const params = { FunctionName: process.env.STATUS_FUNCTION };
+    const data = await lambda.invoke(params).promise();
+    const status = JSON.parse(data.Payload);
+    if (!status.publicIpAddress) {
+        throw Error("IP not available");
+    }
+    return status.publicIpAddress;
+}
+
+exports.handler = async _ => {
+    const address = await getIpAddress();
     console.log(address);
 
     const changeParams = {
