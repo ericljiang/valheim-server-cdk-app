@@ -6,7 +6,7 @@ const params = { InstanceIds: [process.env.INSTANCE_ID] };
 function getGameStatus(ipAddress) {
     return new Promise((resolve, reject) => {
         try {
-            const options = { timeout: 2000 };
+            const options = { timeout: 1000 };
             http.get(`http://${ipAddress}/status.json`, options, (response) => {
                 if (response.statusCode !== 200) {
                     resolve(new Error('statusCode=' + response.statusCode));
@@ -21,7 +21,7 @@ function getGameStatus(ipAddress) {
     });
 }
 
-exports.handler = async (event) => {
+exports.handler = async _ => {
     try {
         console.log("Calling EC2 DescribeInstances API...");
         const instanceDescriptions = await ec2.describeInstances(params).promise();
