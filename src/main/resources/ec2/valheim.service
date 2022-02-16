@@ -23,7 +23,7 @@ ExecStart=/usr/bin/docker run \
           -p 2456-2457:2456-2457/udp \
           -p 80:80/tcp \
           --env-file /etc/sysconfig/valheim-server \
-          ghcr.io/lloesche/valheim-server
+          ghcr.io/lloesche/valheim-server@sha256:e3fb5d2812841123f4e3185a64a1055261e23655632413a49fdf2486475fb9f7
 ExecStop=/usr/bin/docker stop %n
 Restart=always
 RestartSec=10s
