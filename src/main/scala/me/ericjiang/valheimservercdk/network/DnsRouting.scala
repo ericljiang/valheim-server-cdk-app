@@ -3,21 +3,20 @@ package me.ericjiang.valheimservercdk.network
 import me.ericjiang.valheimservercdk.StageConfig
 import me.ericjiang.valheimservercdk.server.compute.AutomatableGameServer
 import software.amazon.awscdk.services.certificatemanager.DnsValidatedCertificate
-import software.amazon.awscdk.services.cloudfront.origins.{HttpOrigin, S3Origin}
 import software.amazon.awscdk.services.cloudfront._
+import software.amazon.awscdk.services.cloudfront.origins.{HttpOrigin, S3Origin}
 import software.amazon.awscdk.services.cloudtrail.Trail
 import software.amazon.awscdk.services.events.OnEventOptions
 import software.amazon.awscdk.services.events.targets.LambdaFunction
 import software.amazon.awscdk.services.route53._
 import software.amazon.awscdk.services.route53.targets.CloudFrontTarget
 import software.amazon.awscdk.services.s3.IBucket
-import software.amazon.awscdk.{Stack, StackProps}
 import software.constructs.Construct
 
 import scala.jdk.CollectionConverters._
 
-class NetworkStack(scope: Construct, id: String, props: StackProps = null,
-  websiteBucket: IBucket, apiDomain: String, gameServer: AutomatableGameServer) extends Stack(scope, id, props) {
+class DnsRouting(scope: Construct, id: String, websiteBucket: IBucket, apiDomain: String, gameServer: AutomatableGameServer)
+  extends Construct(scope, id) {
 
   private val stageConfig = StageConfig.find(this)
 

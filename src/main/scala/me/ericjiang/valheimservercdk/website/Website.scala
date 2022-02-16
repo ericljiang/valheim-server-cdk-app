@@ -1,13 +1,13 @@
 package me.ericjiang.valheimservercdk.website
 
+import software.amazon.awscdk.RemovalPolicy
 import software.amazon.awscdk.services.s3.deployment.{BucketDeployment, Source}
 import software.amazon.awscdk.services.s3.{Bucket, IBucket}
-import software.amazon.awscdk.{RemovalPolicy, Stack, StackProps}
 import software.constructs.Construct
 
 import scala.jdk.CollectionConverters._
 
-class WebsiteStack(scope: Construct, id: String, props: StackProps = null) extends Stack(scope, id, props) {
+class Website(scope: Construct, id: String) extends Construct(scope, id) {
 
   val bucket: IBucket = Bucket.Builder.create(this, "WebsiteBucket")
     .websiteIndexDocument("index.html")
