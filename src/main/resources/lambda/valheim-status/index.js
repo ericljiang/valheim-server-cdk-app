@@ -23,6 +23,7 @@ function getGameStatus(ipAddress) {
 
 exports.handler = async (event) => {
     try {
+        console.log("Calling EC2 DescribeInstances API...");
         const instanceDescriptions = await ec2.describeInstances(params).promise();
         const instance = instanceDescriptions.Reservations[0].Instances[0];
         const instanceStatus = {
@@ -32,6 +33,7 @@ exports.handler = async (event) => {
             publicDnsName: instance.PublicDnsName,
             publicIpAddress: instance.PublicIpAddress
         };
+        console.log(instanceStatus);
 
         if (instanceStatus.state !== 16) {
             console.log("Instance is not running, exiting early.");
@@ -41,7 +43,9 @@ exports.handler = async (event) => {
             };
         }
 
+        console.log("Getting game server status...");
         const serverStatus = await getGameStatus(instanceStatus.publicIpAddress);
+        console.log(serverStatus);
 
         return {
             statusCode: 200,
