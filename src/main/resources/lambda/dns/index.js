@@ -9,7 +9,7 @@ async function getIpAddress() {
     const data = await lambda.invoke(params).promise();
     const status = JSON.parse(data.Payload);
     if (!status.publicIpAddress) {
-        throw Error("IP not available");
+        throw Error(`IP not available: ${status}`);
     }
     return status.publicIpAddress;
 }
