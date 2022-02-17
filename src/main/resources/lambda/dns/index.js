@@ -42,5 +42,5 @@ exports.handler = async _ => {
         },
         HostedZoneId: process.env.HOSTED_ZONE_ID
     };
-    return await route53.changeResourceRecordSets(changeParams).promise();
+    return route53.changeResourceRecordSets(changeParams).promise();
 };

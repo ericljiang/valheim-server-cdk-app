@@ -1,6 +1,7 @@
 package me.ericjiang.valheimservercdk.network
 
 import me.ericjiang.valheimservercdk.StageConfig
+import software.amazon.awscdk.Duration
 import software.amazon.awscdk.services.iam.{Effect, PolicyStatement}
 import software.amazon.awscdk.services.lambda.{Code, Function, Runtime}
 import software.amazon.awscdk.services.route53.IHostedZone
@@ -19,6 +20,7 @@ class RouteDnsFunction(scope: Construct, id: String, hostedZone: IHostedZone, st
       "HOSTED_ZONE_ID" -> hostedZone.getHostedZoneId,
       "STATUS_FUNCTION" -> statusFunction.getFunctionName
     ).asJava)
+    .timeout(Duration.seconds(10))
     .build
   function.addToRolePolicy(PolicyStatement.Builder.create
     .actions(Seq("route53:ChangeResourceRecordSets").asJava)
