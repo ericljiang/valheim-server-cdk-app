@@ -7,9 +7,13 @@ const route53 = new Route53();
 async function getIpAddress() {
     const params = { FunctionName: process.env.STATUS_FUNCTION };
     const data = await lambda.invoke(params).promise();
-    const status = JSON.parse(data.Payload);
+    const response = JSON.parse(data.Payload);
+    if (response.statusCode !== 200) {
+        throw Error("Unsuccessful status response: " + data.Payload);
+    }
+    const status = JSON.parse(response.body);
     if (!status.publicIpAddress) {
-        throw Error(`IP not available: ${status}`);
+        throw Error(`IP not available: ${response.body}`);
     }
     return status.publicIpAddress;
 }
