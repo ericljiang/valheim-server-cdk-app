@@ -7,14 +7,17 @@ function getGameStatus(ipAddress) {
     return new Promise((resolve, reject) => {
         try {
             const options = { timeout: 1000 };
-            http.get(`http://${ipAddress}/status.json`, options, (response) => {
+            const request = http.get(`http://${ipAddress}/status.json`, options, (response) => {
                 if (response.statusCode !== 200) {
                     resolve(new Error('statusCode=' + response.statusCode));
                 }
                 let str = '';
                 response.on('data', (chunk) => str += chunk);
                 response.on('end', () => resolve(JSON.parse(str)));
-            }).on('error', resolve).end();
+            });
+            request.on('socket', socket => socket.setTimeout(1000, socket.destroy));
+            request.on('error', resolve);
+            request.end();
         } catch (error) {
             reject(error);
         }
