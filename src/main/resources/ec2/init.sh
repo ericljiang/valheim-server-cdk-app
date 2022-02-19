@@ -20,3 +20,5 @@ systemctl start docker
 systemctl daemon-reload
 systemctl enable valheim.service
 systemctl start valheim.service
+
+shutdown now -P
