@@ -3,6 +3,7 @@
   -m ec2 \
   -s \
   -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+systemctl start docker
 /usr/bin/docker create \
   --name valheim \
   --log-driver=awslogs \
