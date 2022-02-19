@@ -46,7 +46,7 @@ class CdkPipelineStack(scope: Construct, id: String, props: StackProps = null) e
   private val prod = pipeline.addStage(new ServerStage(this, StageConfig.Prod))
   prod.addPre(new ManualApprovalStep("PromoteToProd"))
 
-  def gitHubSource(repository: String, branch: String = "main"): CodePipelineSource =
+  private def gitHubSource(repository: String, branch: String = "main"): CodePipelineSource =
     CodePipelineSource.connection(s"ericljiang/$repository", branch, ConnectionSourceOptions.builder
       .connectionArn(codeStarConnection.getAttrConnectionArn)
       .build)

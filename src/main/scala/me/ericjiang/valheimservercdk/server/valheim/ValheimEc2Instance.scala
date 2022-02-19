@@ -8,6 +8,7 @@ import software.amazon.awscdk.services.iam.{Effect, ManagedPolicy, PolicyStateme
 import software.amazon.awscdk.services.s3.Bucket
 import software.constructs.Construct
 
+import scala.io.Source
 import scala.jdk.CollectionConverters._
 
 class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, id) {
@@ -75,11 +76,11 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
            |}
            |""".stripMargin),
     InitCommand.shellCommand(
-      """/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-        |systemctl daemon-reload
-        |systemctl enable valheim.service
-        |systemctl start valheim.service
-        |""".stripMargin)
+      Source.fromResource("ec2/init.sh").mkString("\n"),
+      InitCommandOptions.builder
+        .env(Map("LOG_GROUP" -> stageConfig.logGroup).asJava)
+        .build
+    )
   )
 
   // create instance

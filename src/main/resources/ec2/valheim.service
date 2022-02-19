@@ -5,26 +5,9 @@ After=docker.service
 Requires=docker.service
 ConditionPathExists=/etc/sysconfig/valheim-server
 [Service]
-EnvironmentFile=/etc/sysconfig/valheim-service
 TimeoutStartSec=0
-ExecStartPre=-/usr/bin/docker stop %n
-ExecStartPre=-/usr/bin/docker rm %n
-ExecStart=/usr/bin/docker run \
-          --log-driver=awslogs \
-          --log-opt awslogs-group=${LOG_GROUP}/application \
-          --log-opt awslogs-create-group=true \
-          --name %n \
-          --pull=always \
-          --rm \
-          --cap-add=sys_nice \
-          --stop-timeout 120 \
-          -v /etc/valheim:/config:Z \
-          -v /opt/valheim:/opt/valheim:Z \
-          -p 2456-2457:2456-2457/udp \
-          -p 80:80/tcp \
-          --env-file /etc/sysconfig/valheim-server \
-          ghcr.io/lloesche/valheim-server@sha256:e3fb5d2812841123f4e3185a64a1055261e23655632413a49fdf2486475fb9f7
-ExecStop=/usr/bin/docker stop %n
+ExecStart=/usr/bin/docker start valheim
+ExecStop=/usr/bin/docker stop valheim
 Restart=always
 RestartSec=10s
 [Install]
