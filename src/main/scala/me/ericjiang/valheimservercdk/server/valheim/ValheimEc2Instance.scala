@@ -10,6 +10,7 @@ import software.constructs.Construct
 
 import scala.io.Source
 import scala.jdk.CollectionConverters._
+import scala.util.Using
 
 class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, id) {
 
@@ -76,7 +77,7 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
            |}
            |""".stripMargin),
     InitCommand.shellCommand(
-      Source.fromResource("ec2/init.sh").mkString("\n"),
+      Using(Source.fromResource("ec2/init.sh"))(_.mkString).get,
       InitCommandOptions.builder
         .env(Map("LOG_GROUP" -> stageConfig.logGroup).asJava)
         .build
