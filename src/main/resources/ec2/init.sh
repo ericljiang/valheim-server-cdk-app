@@ -1,4 +1,7 @@
-/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+whoami
+which shutdown
+
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
   -a fetch-config \
   -m ec2 \
   -s \
@@ -21,4 +24,4 @@ systemctl daemon-reload
 systemctl enable valheim.service
 systemctl start valheim.service
 
-shutdown now -P
+sudo shutdown now -P
