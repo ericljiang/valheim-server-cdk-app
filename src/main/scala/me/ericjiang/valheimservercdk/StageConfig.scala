@@ -14,6 +14,7 @@ trait StageConfig {
   def idleDuration: Duration
   def logGroup: String = stageName
   def metricNamespace: String = stageName
+  def rollbackInstanceOnFailure: Boolean
 }
 
 object StageConfig {
@@ -24,6 +25,7 @@ object StageConfig {
     override def gameServerDomain: String = "vh-beta.ericjiang.me"
     override def apiPath: String = "api"
     override def idleDuration: Duration = 10.minutes
+    override def rollbackInstanceOnFailure: Boolean = false
   }
 
   case object Prod extends StageConfig {
@@ -33,6 +35,7 @@ object StageConfig {
     override def gameServerDomain: String = "vh.ericjiang.me"
     override def apiPath: String = "api"
     override def idleDuration: Duration = 1.hour
+    override def rollbackInstanceOnFailure: Boolean = true
   }
 
   val mapping: Map[String, StageConfig] = Seq(Beta, Prod).map(config => config.stageName -> config).toMap

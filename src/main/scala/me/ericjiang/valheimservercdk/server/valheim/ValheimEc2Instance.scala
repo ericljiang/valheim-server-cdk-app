@@ -94,7 +94,10 @@ class ValheimEc2Instance(scope: Construct, id: String) extends Construct(scope, 
     .vpc(Vpc.fromLookup(this, "DefaultVpc", VpcLookupOptions.builder.isDefault(true).build))
     .init(cloudFormationInit)
     // Recreate instance to apply changes. Use in development only!
-    .initOptions(ApplyCloudFormationInitOptions.builder.embedFingerprint(true).build)
+    .initOptions(ApplyCloudFormationInitOptions.builder
+      .printLog(true)
+      .ignoreFailures(!stageConfig.rollbackInstanceOnFailure)
+      .embedFingerprint(true).build)
     .userDataCausesReplacement(true)
     .build
 
