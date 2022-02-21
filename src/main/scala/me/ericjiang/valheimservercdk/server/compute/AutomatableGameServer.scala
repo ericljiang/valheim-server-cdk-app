@@ -25,8 +25,6 @@ trait AutomatableGameServer {
    */
   def statusFunction: Function
 
-  def getIpAddress: Function
-
   def startEventPattern: EventPattern
 
   def idleAlarm: Alarm

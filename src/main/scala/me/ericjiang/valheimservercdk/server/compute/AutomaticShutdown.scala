@@ -13,7 +13,7 @@ class AutomaticShutdown(scope: Construct, id: String, autoStoppingGameServer: Au
     .alarmDescription("Ensures that the idle alarm will enter OK state for at least one period after server starts.")
     .metric(autoStoppingGameServer.uptimeMetric)
     .comparisonOperator(ComparisonOperator.LESS_THAN_OR_EQUAL_TO_THRESHOLD)
-    .threshold(300)
+    .threshold(autoStoppingGameServer.uptimeMetric.getPeriod.toSeconds)
     .evaluationPeriods(1)
     .build
 

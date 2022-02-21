@@ -25,8 +25,6 @@ class AutomatableValheimServer(scope: Construct, id: String, idleDuration: Durat
   override val statusFunction: lambda.Function =
     new ValheimStatusFunction(this, "StatusFunction", valheimInstance.instance).function
 
-  override def getIpAddress: lambda.Function = ???
-
   override val startEventPattern: EventPattern = EventPattern.builder
     .source(Seq("aws.ec2").asJava)
     .detailType(Seq("EC2 Instance State-change Notification").asJava)

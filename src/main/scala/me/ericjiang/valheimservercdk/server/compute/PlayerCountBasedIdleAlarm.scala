@@ -1,6 +1,6 @@
 package me.ericjiang.valheimservercdk.server.compute
 
-import software.amazon.awscdk.services.cloudwatch.{Alarm, ComparisonOperator, Metric}
+import software.amazon.awscdk.services.cloudwatch.{Alarm, ComparisonOperator, Metric, TreatMissingData}
 import software.constructs.Construct
 
 import java.util.concurrent.TimeUnit
@@ -18,5 +18,6 @@ class PlayerCountBasedIdleAlarm(scope: Construct, id: String, playerCountMetric:
     .comparisonOperator(ComparisonOperator.LESS_THAN_OR_EQUAL_TO_THRESHOLD)
     .threshold(0)
     .evaluationPeriods(evaluationPeriods)
+    .treatMissingData(TreatMissingData.NOT_BREACHING)
     .build
 }
