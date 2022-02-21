@@ -6,7 +6,7 @@ Requires=docker.service
 ConditionPathExists=/etc/sysconfig/valheim-server
 [Service]
 TimeoutStartSec=0
-ExecStart=/usr/bin/docker start valheim
+ExecStart=/usr/bin/docker start -a valheim
 ExecStop=/usr/bin/docker stop valheim
 Restart=always
 RestartSec=10s
