@@ -24,3 +24,16 @@
  * `cdk deploy`      deploy this stack to your default AWS account/region
  * `cdk diff`        compare deployed stack with current state
  * `cdk docs`        open CDK documentation
+
+List instances
+```sh
+aws ec2 describe-instances \
+    --filters Name=tag-key,Values=Name \
+    --query 'Reservations[*].Instances[*].{Instance:InstanceId,AZ:Placement.AvailabilityZone,Name:Tags[?Key==`Name`]|[0].Value}' \
+    --output table
+```
+
+SSH into instance with [`mssh`](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Connect-using-EC2-Instance-Connect.html)
+```sh
+mssh i-0ed1768e347e2e71e
+```
