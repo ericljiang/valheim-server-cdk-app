@@ -37,3 +37,8 @@ SSH into instance with [`mssh`](https://docs.aws.amazon.com/AWSEC2/latest/UserGu
 ```sh
 mssh i-0ed1768e347e2e71e
 ```
+
+Copy files over mssh
+```sh
+rsync -a -e mssh worlds-20220305-073011.zip ec2-user@i-0ffa7de6be0e0047c:/home/ec2-user/
+```
